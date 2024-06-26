@@ -24,9 +24,19 @@ public class SavingAccount extends BaseTimeEntity {
     private Long amount;
 
     @Enumerated(EnumType.STRING)
-    private SavingType savingType;
+    private SavingType savingType; // 이후 스탭에서 사용 예정
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
+
+    public SavingAccount(String accountNumber, Member member) {
+        this.accountNumber = accountNumber;
+        this.member = member;
+        this.amount = 0L;
+    }
+
+    public static SavingAccount of(String accountNumber, Member member) {
+        return new SavingAccount(accountNumber, member);
+    }
 }
