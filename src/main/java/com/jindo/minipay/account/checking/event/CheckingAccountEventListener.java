@@ -15,6 +15,6 @@ public class CheckingAccountEventListener {
     @TransactionalEventListener
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleCreateCheckingAccount(CreateCheckingAccountEvent event) {
-        checkingAccountService.createCheckingAccount(event.memberId());
+        checkingAccountService.createAccount(event.memberId());
     }
 }

@@ -31,7 +31,7 @@ public class CheckingAccountService {
 
     private static final Integer DAILY_CHARGING_LIMIT = 3_000_000;
 
-    public void createCheckingAccount(Long memberId) {
+    public void createAccount(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new AccountException(NOT_FOUND_MEMBER));
 
