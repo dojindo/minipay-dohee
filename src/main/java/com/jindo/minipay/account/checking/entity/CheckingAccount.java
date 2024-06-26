@@ -25,4 +25,14 @@ public class CheckingAccount extends BaseTimeEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
+
+    public CheckingAccount(String accountNumber, Member member) {
+        this.accountNumber = accountNumber;
+        this.member = member;
+        this.balance = 0L;
+    }
+
+    public static CheckingAccount of(String accountNumber, Member member) {
+        return new CheckingAccount(accountNumber, member);
+    }
 }

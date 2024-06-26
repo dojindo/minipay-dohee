@@ -9,6 +9,10 @@ import static org.springframework.http.HttpStatus.*;
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode {
+    // member
+    ALREADY_EXISTS_MEMBER(BAD_REQUEST, "이미 가입된 회원입니다."),
+    NOT_FOUND_MEMBER(NOT_FOUND, "존재하지 않는 회원입니다."),
+
     // global
     INVALID_REQUEST(BAD_REQUEST, "잘못된 요청입니다."),
     INTERNAL_ERROR(INTERNAL_SERVER_ERROR, "예상치 못한 내부 문제가 발생했습니다.");
