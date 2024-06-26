@@ -1,5 +1,6 @@
 package com.jindo.minipay.account.checking.entity;
 
+import com.jindo.minipay.account.common.exception.AccountException;
 import com.jindo.minipay.global.entity.BaseTimeEntity;
 import com.jindo.minipay.member.entity.Member;
 import jakarta.persistence.*;
@@ -7,6 +8,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
+
+import static com.jindo.minipay.global.exception.ErrorCode.INVALID_REQUEST;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -34,5 +37,12 @@ public class CheckingAccount extends BaseTimeEntity {
 
     public static CheckingAccount of(String accountNumber, Member member) {
         return new CheckingAccount(accountNumber, member);
+    }
+
+    public void increaseBalance(Long amount) {
+        if (amount < 0) {
+            throw new AccountException(INVALID_REQUEST);
+        }
+        balance += amount;
     }
 }
