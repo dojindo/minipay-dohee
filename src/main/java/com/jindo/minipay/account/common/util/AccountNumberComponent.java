@@ -1,0 +1,62 @@
+package com.jindo.minipay.account.common.util;
+
+import com.jindo.minipay.account.checking.repository.CheckingAccountRepository;
+import com.jindo.minipay.account.common.repository.AccountRepository;
+import com.jindo.minipay.account.common.type.AccountType;
+import com.jindo.minipay.account.saving.repository.SavingAccountRepository;
+import org.springframework.stereotype.Component;
+
+import java.util.EnumMap;
+import java.util.Random;
+
+@Component
+public class AccountNumberComponent {
+    private static final Random RANDOM = new Random();
+    private static final int MID_LENGTH = 2;
+    private static final int END_LENGTH = 7;
+
+    private final EnumMap<AccountType, AccountRepository> repositoryEnumMap =
+            new EnumMap<>(AccountType.class);
+
+    public AccountNumberComponent(CheckingAccountRepository checkingAccountRepository,
+                                  SavingAccountRepository savingAccountRepository) {
+        repositoryEnumMap.put(AccountType.CHECKING, checkingAccountRepository);
+        repositoryEnumMap.put(AccountType.SAVINGS, savingAccountRepository);
+    }
+
+    // TODO: 계좌가 많아질수록 중복 확인이 느려진다. 유저별로 계좌를 식별할 수 있으면 좋을듯
+    public String getAccountNumber(AccountType accountType) {
+        String accountNumber;
+        boolean isNew;
+
+        do {
+            accountNumber = generateAccountNumber(accountType);
+            isNew = !repositoryEnumMap.get(accountType)
+                    .existsByAccountNumber(accountNumber);
+        } while (!isNew);
+
+        return accountNumber;
+    }
+
+    // 일련번호 무작위 추출 8888-01-1234567
+    private String generateAccountNumber(AccountType accountType) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(accountType.getCode()).append("-");
+
+        for (int i = 0; i < MID_LENGTH; i++) {
+            sb.append(getNextInt());
+        }
+
+        sb.append("-");
+
+        for (int i = 0; i < END_LENGTH; i++) {
+            sb.append(getNextInt());
+        }
+
+        return sb.toString();
+    }
+
+    private int getNextInt() {
+        return RANDOM.nextInt(10);
+    }
+}

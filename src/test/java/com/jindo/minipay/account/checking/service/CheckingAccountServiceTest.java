@@ -6,14 +6,16 @@ import com.jindo.minipay.account.checking.entity.CheckingAccount;
 import com.jindo.minipay.account.checking.repository.CheckingAccountRepository;
 import com.jindo.minipay.account.common.exception.AccountException;
 import com.jindo.minipay.account.common.type.AccountType;
-import com.jindo.minipay.account.common.util.AccountNumberGenerator;
+import com.jindo.minipay.account.common.util.AccountNumberComponent;
 import com.jindo.minipay.member.entity.Member;
 import com.jindo.minipay.member.repository.MemberRepository;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -36,6 +38,9 @@ class CheckingAccountServiceTest {
     MemberRepository memberRepository;
 
     @Mock
+    AccountNumberComponent accountNumberComponent;
+
+    @Mock
     ValueOperations<String, Object> redisValueOps;
 
     @InjectMocks
@@ -55,18 +60,11 @@ class CheckingAccountServiceTest {
     @DisplayName("메인 계좌 생성 메서드")
     class CreateAccountMethod {
         Long memberId = 1L;
-        MockedStatic<AccountNumberGenerator> mockedAccountNumberGenerator;
 
         @BeforeEach
         void setUp() {
-            mockedAccountNumberGenerator = mockStatic(AccountNumberGenerator.class);
             ReflectionTestUtils.setField(member, "id", 1L);
             ReflectionTestUtils.setField(account, "id", 1L);
-        }
-
-        @AfterEach
-        void tearDown() {
-            mockedAccountNumberGenerator.close();
         }
 
         @Test
@@ -76,12 +74,8 @@ class CheckingAccountServiceTest {
             given(memberRepository.findById(1L))
                     .willReturn(Optional.of(member));
 
-            mockedAccountNumberGenerator.when(() -> AccountNumberGenerator
-                            .generateAccountNumber(AccountType.CHECKING))
-                    .thenReturn(accountNumber);
-
-            given(accountRepository.existsByAccountNumber(accountNumber))
-                    .willReturn(false);
+            given(accountNumberComponent.getAccountNumber(AccountType.CHECKING))
+                    .willReturn(accountNumber);
 
             given(accountRepository.save(any()))
                     .willReturn(account);
