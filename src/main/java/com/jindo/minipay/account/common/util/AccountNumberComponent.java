@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import java.util.EnumMap;
 import java.util.Random;
 
+import static com.jindo.minipay.account.common.type.AccountType.*;
+
 @Component
 public class AccountNumberComponent {
     private static final Random RANDOM = new Random();
@@ -20,8 +22,8 @@ public class AccountNumberComponent {
 
     public AccountNumberComponent(CheckingAccountRepository checkingAccountRepository,
                                   SavingAccountRepository savingAccountRepository) {
-        repositoryEnumMap.put(AccountType.CHECKING, checkingAccountRepository);
-        repositoryEnumMap.put(AccountType.SAVINGS, savingAccountRepository);
+        repositoryEnumMap.put(CHECKING, checkingAccountRepository);
+        repositoryEnumMap.put(SAVINGS, savingAccountRepository);
     }
 
     // TODO: 계좌가 많아질수록 중복 확인이 느려진다. 유저별로 계좌를 식별할 수 있으면 좋을듯
