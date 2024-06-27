@@ -1,5 +1,6 @@
 package com.jindo.minipay.member.entity;
 
+import com.jindo.minipay.account.checking.entity.CheckingAccount;
 import com.jindo.minipay.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -24,6 +25,9 @@ public class Member extends BaseTimeEntity {
 
     @Column(nullable = false)
     private String name;
+
+    @OneToOne(mappedBy = "member")
+    private CheckingAccount checkingAccount;
 
     @Builder
     public Member(String email, String password, String name) {

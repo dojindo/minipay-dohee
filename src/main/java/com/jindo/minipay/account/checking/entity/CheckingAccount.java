@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 
+import static com.jindo.minipay.global.exception.ErrorCode.INSUFFICIENT_BALANCE;
 import static com.jindo.minipay.global.exception.ErrorCode.INVALID_REQUEST;
 
 @Getter
@@ -44,5 +45,12 @@ public class CheckingAccount extends BaseTimeEntity {
             throw new AccountException(INVALID_REQUEST);
         }
         balance += amount;
+    }
+
+    public void decreaseBalance(Long amount) {
+        if (balance < amount) {
+            throw new AccountException(INSUFFICIENT_BALANCE);
+        }
+        balance -= amount;
     }
 }

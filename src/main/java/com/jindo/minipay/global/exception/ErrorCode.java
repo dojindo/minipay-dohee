@@ -16,6 +16,7 @@ public enum ErrorCode {
     // account
     NOT_FOUND_ACCOUNT_NUMBER(NOT_FOUND, "존재하지 않는 계좌번호입니다."),
     EXCEEDED_DAILY_CHARGING_LIMIT(BAD_REQUEST, "1일 충전 한도를 초과했습니다."),
+    INSUFFICIENT_BALANCE(BAD_REQUEST, "잔액이 부족합니다."),
 
     // global
     INVALID_REQUEST(BAD_REQUEST, "잘못된 요청입니다."),
