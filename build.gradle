@@ -36,6 +36,9 @@ dependencies {
 	// embedded redis
 	implementation 'com.github.codemonstur:embedded-redis:1.4.3'
 
+	// redis client
+	implementation 'org.redisson:redisson-spring-boot-starter:3.32.0'
+
 	// querydsl
 	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
 	annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
