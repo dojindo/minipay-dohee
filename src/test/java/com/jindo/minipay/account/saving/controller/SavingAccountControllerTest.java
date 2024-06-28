@@ -53,7 +53,10 @@ class SavingAccountControllerTest {
     void payIn() throws Exception {
         // given
         String accountNumber = "8800-01-1234567";
-        PayInRequest request = new PayInRequest(accountNumber, 10000L);
+
+        PayInRequest request = new PayInRequest(accountNumber,
+                "8888-01-1234567", 10000L);
+
         PayInResponse response = new PayInResponse(accountNumber, 10000L);
 
         given(savingAccountService.payIn(request))

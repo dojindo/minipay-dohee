@@ -109,9 +109,10 @@ class SavingAccountServiceTest {
         SavingAccount savingAccount = SavingAccount.of(accountNumber, member);
 
         CheckingAccount checkingAccount =
-                CheckingAccount.of("8888-01-1234567", member);
+                CheckingAccount.of("8800-01-1234567", member);
 
-        PayInRequest request = new PayInRequest(accountNumber, 10000L);
+        PayInRequest request = new PayInRequest(accountNumber,
+                "8888-01-1234567", 10000L);
 
         @Test
         @DisplayName("적금 계좌에 납입한다.")
