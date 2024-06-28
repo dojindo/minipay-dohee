@@ -2,6 +2,8 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.3.1'
 	id 'io.spring.dependency-management' version '1.1.5'
+	id 'jacoco'
+	id "org.sonarqube" version "4.4.1.3373"
 }
 
 group = 'com.jindo'
@@ -51,8 +53,60 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy 'jacocoTestReport'
 }
 
+// jacoco
+jacocoTestReport {
+	dependsOn test
+
+	reports {
+		html.required = true
+		xml.required = true
+	}
+
+	def Qdomains = []
+	for (qPattern in '**/QA'..'**/QZ') { // qPattern = '**/QA', '**/QB', ... '*.QZ'
+		Qdomains.add(qPattern + '*')
+	}
+	afterEvaluate {
+		classDirectories.setFrom(
+				files(classDirectories.files.collect {
+					fileTree(dir: it, excludes: [
+							// 측정 안하고 싶은 패턴
+							"**/*Application*",
+							"**/*Config*",
+							"**/*Dto*",
+							"**/*Request*",
+							"**/*Response*",
+							"**/*Interceptor*",
+							"**/*Exception*"
+							// Querydsl 관련 제거
+					] + Qdomains)
+				})
+		)
+	}
+}
+
+// sonarqube
+sonarqube {
+	properties {
+		property "sonar.projectKey", "dojindo_minipay-dohee"
+		property "sonar.organization", "dojindo"
+		property 'sonar.host.url', 'https://sonarcloud.io'
+		property 'sonar.sources', 'src'
+		property 'sonar.language', 'java'
+		property 'sonar.sourceEncoding', 'UTF-8'
+		property 'sonar.test.inclusions', '**/*Test.java'
+		property 'sonar.exclusions', '**/test/**, **/Q*.java, **/*Doc*.java, **/resources/** ,**/*Application*.java , **/*Config*.java,' +
+				'**/*Dto*.java, **/*Request*.java, **/*Response*.java ,**/*Exception*.java ,**/*ErrorCode*.java'
+		property 'sonar.java.coveragePlugin', 'jacoco'
+		property 'sonar.java.binaries', "${buildDir}/classes"
+		property 'sonar.coverage.jacoco.xmlReportPaths', "${buildDir}/reports/jacoco.xml"
+	}
+}
+
+// querydsl
 def querydslDir = 'src/main/generated'
 
 tasks.withType(JavaCompile).configureEach {
