@@ -20,7 +20,7 @@ public class RedissonLockService implements LockService {
     private static final String KEY_PREFIX = "RSLK:";
 
     @Override
-    public void getLock(String key, Long waitTime, Long releaseTime) {
+    public void getLock(String key, Long waitTime, Long releaseTime) throws InterruptedException {
         RLock lock = redissonClient.getLock(getKey(key));
 
         try {
@@ -32,7 +32,7 @@ public class RedissonLockService implements LockService {
                 throw new LockException(RESOURCE_LOCKED);
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            throw new InterruptedException();
         }
     }
 
