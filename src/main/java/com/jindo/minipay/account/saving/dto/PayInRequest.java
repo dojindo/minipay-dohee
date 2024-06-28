@@ -8,7 +8,10 @@ import lombok.Builder;
 @Builder
 public record PayInRequest(
         @NotBlank
-        String accountNumber,
+        String savingAccountNumber,
+
+        @NotNull
+        String checkingAccountNumber,
 
         @NotNull
         @PositiveOrZero

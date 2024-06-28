@@ -8,6 +8,7 @@ import com.jindo.minipay.account.common.exception.AccountException;
 import com.jindo.minipay.account.common.type.AccountType;
 import com.jindo.minipay.account.common.util.AccountNumberComponent;
 import com.jindo.minipay.global.exception.ErrorCode;
+import com.jindo.minipay.lock.annotation.DistributedLock;
 import com.jindo.minipay.member.entity.Member;
 import com.jindo.minipay.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,7 @@ public class CheckingAccountService {
         checkingAccountRepository.save(CheckingAccount.of(accountNumber, member));
     }
 
+    @DistributedLock(keyField = "accountNumber")
     @Transactional
     public ChargeResponse charge(ChargeRequest request) {
         CheckingAccount checkingAccount = checkingAccountRepository
@@ -53,7 +55,7 @@ public class CheckingAccountService {
 
         validateChargeLimit(email, amount);
 
-        checkingAccount.increaseBalance(amount); // TODO: 동시성 처리
+        checkingAccount.increaseBalance(amount);
         return ChargeResponse.fromEntity(checkingAccount);
     }
 

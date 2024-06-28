@@ -9,6 +9,7 @@ import com.jindo.minipay.account.saving.dto.PayInRequest;
 import com.jindo.minipay.account.saving.dto.PayInResponse;
 import com.jindo.minipay.account.saving.entity.SavingAccount;
 import com.jindo.minipay.account.saving.repository.SavingAccountRepository;
+import com.jindo.minipay.lock.annotation.DistributedLock;
 import com.jindo.minipay.member.entity.Member;
 import com.jindo.minipay.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,20 +39,18 @@ public class SavingAccountService {
         return savedAccount.getId();
     }
 
+    @DistributedLock(keyField = "checkingAccountNumber")
     @Transactional
     public PayInResponse payIn(PayInRequest request) {
         SavingAccount savingAccount = savingAccountRepository
-                .findByAccountNumberFetchJoin(request.accountNumber())
+                .findByAccountNumberFetchJoin(request.savingAccountNumber())
                 .orElseThrow(() -> new AccountException(NOT_FOUND_ACCOUNT_NUMBER));
 
-        CheckingAccount checkingAccount = savingAccount.getMember()
-                .getCheckingAccount();
+        CheckingAccount checkingAccount = savingAccount.getMember().getCheckingAccount();
         Long amount = request.amount();
 
-        // TODO: 동시성 처리
         checkingAccount.decreaseBalance(amount);
         savingAccount.increaseAmount(amount);
-
         return PayInResponse.fromEntity(savingAccount);
     }
 }
