@@ -8,6 +8,7 @@ import com.jindo.minipay.account.saving.dto.PayInRequest;
 import com.jindo.minipay.account.saving.entity.SavingAccount;
 import com.jindo.minipay.account.saving.repository.SavingAccountRepository;
 import com.jindo.minipay.account.saving.service.SavingAccountService;
+import com.jindo.minipay.lock.exception.LockException;
 import com.jindo.minipay.member.entity.Member;
 import com.jindo.minipay.member.repository.MemberRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -23,7 +24,7 @@ import java.util.stream.IntStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
-public class AccountConcurrencyTest {
+class AccountConcurrencyTest {
     @Autowired
     MemberRepository memberRepository;
 
@@ -81,6 +82,8 @@ public class AccountConcurrencyTest {
                     try {
                         checkingAccountService.charge(chargeRequest);
                         savingAccountService.payIn(payInRequest);
+                    } catch (LockException e) {
+                        System.out.println(e.getMessage());
                     } finally {
                         countDownLatch.countDown();
                     }

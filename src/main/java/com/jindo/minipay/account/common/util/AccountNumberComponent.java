@@ -4,13 +4,16 @@ import com.jindo.minipay.account.checking.repository.CheckingAccountRepository;
 import com.jindo.minipay.account.common.repository.AccountRepository;
 import com.jindo.minipay.account.common.type.AccountType;
 import com.jindo.minipay.account.saving.repository.SavingAccountRepository;
+import lombok.Getter;
 import org.springframework.stereotype.Component;
 
 import java.util.EnumMap;
 import java.util.Random;
 
-import static com.jindo.minipay.account.common.type.AccountType.*;
+import static com.jindo.minipay.account.common.type.AccountType.CHECKING;
+import static com.jindo.minipay.account.common.type.AccountType.SAVINGS;
 
+@Getter
 @Component
 public class AccountNumberComponent {
     private static final Random RANDOM = new Random();

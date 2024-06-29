@@ -38,3 +38,6 @@ out/
 
 ### querydsl ###
 /src/main/generated/
+
+### sonarcloud ###
+/.sonarlint/
