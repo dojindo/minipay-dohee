@@ -6,7 +6,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 
 class CheckingAccountTest {
     @Test
@@ -27,7 +26,8 @@ class CheckingAccountTest {
     @DisplayName("금액이 잔액보다 많으면 예외가 발생한다.")
     void decreaseBalance() {
         // given
-        CheckingAccount checkingAccount = CheckingAccount.of(any(), any());
+        CheckingAccount checkingAccount =
+                new CheckingAccount("accountNumber", null);
         long amount = 1000L;
 
         // when
