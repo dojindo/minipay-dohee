@@ -3,6 +3,8 @@ package com.jindo.minipay.account.checking.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jindo.minipay.account.checking.dto.ChargeRequest;
 import com.jindo.minipay.account.checking.dto.ChargeResponse;
+import com.jindo.minipay.account.checking.dto.RemitRequest;
+import com.jindo.minipay.account.checking.dto.RemitResponse;
 import com.jindo.minipay.account.checking.service.CheckingAccountService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,8 @@ class CheckingAccountControllerTest {
 
     @Autowired
     ObjectMapper objectMapper;
+    @Autowired
+    private CheckingAccountService checkingAccountService;
 
     @Test
     @DisplayName("메인 계좌에 충전한다.")
@@ -48,6 +52,34 @@ class CheckingAccountControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accountNumber").value(accountNumber))
                 .andExpect(jsonPath("$.balance").value(10000))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("메인 계좌에서 친구 계좌로 송금한다.")
+    void remit() throws Exception {
+        // given
+        String myAccountNumber = "8888-01-1234567";
+
+        RemitRequest request = RemitRequest.builder()
+                .myAccountNumber(myAccountNumber)
+                .receiverAccountNumber("8888-02-7654321")
+                .amount(10000L)
+                .build();
+
+        RemitResponse response = new RemitResponse(myAccountNumber, 5000L);
+
+        given(checkingAccountService.remit(request))
+                .willReturn(response);
+
+        // when
+        // then
+        mockMvc.perform(post("/api/v1/account/checking/remit")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accountNumber").value(myAccountNumber))
+                .andExpect(jsonPath("$.balance").value(5000L))
                 .andDo(print());
     }
 }
