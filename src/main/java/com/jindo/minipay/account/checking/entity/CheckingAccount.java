@@ -24,7 +24,7 @@ public class CheckingAccount extends BaseTimeEntity {
     private String accountNumber;
 
     @ColumnDefault("0")
-    private Long balance;
+    private long balance;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
@@ -33,7 +33,6 @@ public class CheckingAccount extends BaseTimeEntity {
     public CheckingAccount(String accountNumber, Member member) {
         this.accountNumber = accountNumber;
         this.member = member;
-        this.balance = 0L;
     }
 
     public static CheckingAccount of(String accountNumber, Member member) {

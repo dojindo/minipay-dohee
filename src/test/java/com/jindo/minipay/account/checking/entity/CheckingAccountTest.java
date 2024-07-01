@@ -26,8 +26,7 @@ class CheckingAccountTest {
     @DisplayName("금액이 잔액보다 많으면 예외가 발생한다.")
     void decreaseBalance() {
         // given
-        CheckingAccount checkingAccount =
-                new CheckingAccount("accountNumber", null);
+        CheckingAccount checkingAccount = new CheckingAccount();
         long amount = 1000L;
 
         // when

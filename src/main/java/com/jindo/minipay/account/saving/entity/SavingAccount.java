@@ -24,7 +24,7 @@ public class SavingAccount extends BaseTimeEntity {
     private String accountNumber;
 
     @ColumnDefault("0")
-    private Long amount;
+    private long amount;
 
     @Enumerated(EnumType.STRING)
     private SavingType savingType; // 이후 스탭에서 사용 예정
@@ -36,7 +36,6 @@ public class SavingAccount extends BaseTimeEntity {
     public SavingAccount(String accountNumber, Member member) {
         this.accountNumber = accountNumber;
         this.member = member;
-        this.amount = 0L;
     }
 
     public static SavingAccount of(String accountNumber, Member member) {
