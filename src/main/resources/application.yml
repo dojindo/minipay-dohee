@@ -1,0 +1,8 @@
+spring:
+  profiles:
+    active: local
+
+sonar:
+  organization: dojindo
+  projectKey: dojindo_minipay-dohee
+  sources: .

@@ -2,6 +2,8 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.3.1'
 	id 'io.spring.dependency-management' version '1.1.5'
+	id 'jacoco'
+	id "org.sonarqube" version "4.4.1.3373"
 }
 
 group = 'com.jindo'
@@ -32,10 +34,87 @@ dependencies {
 	runtimeOnly 'com.h2database:h2'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.projectlombok:lombok'
+
+	// embedded redis
+	implementation 'com.github.codemonstur:embedded-redis:1.4.3'
+
+	// redis client
+	implementation 'org.redisson:redisson-spring-boot-starter:3.32.0'
+
+	// querydsl
+	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+	annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
+	annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
+	annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy 'jacocoTestReport'
+}
+
+// jacoco
+jacocoTestReport {
+	dependsOn test
+
+	reports {
+		html.required = true
+		xml.required = true
+	}
+
+	def Qdomains = []
+	for (qPattern in '**/QA'..'**/QZ') { // qPattern = '**/QA', '**/QB', ... '*.QZ'
+		Qdomains.add(qPattern + '*')
+	}
+	afterEvaluate {
+		classDirectories.setFrom(
+				files(classDirectories.files.collect {
+					fileTree(dir: it, excludes: [
+							// 측정 안하고 싶은 패턴
+							"**/*Application*",
+							"**/*Config*",
+							"**/*Dto*",
+							"**/*Request*",
+							"**/*Response*",
+							"**/*Interceptor*",
+							"**/*Exception*",
+							"**/*BaseTimeEntity"
+							// Querydsl 관련 제거
+					] + Qdomains)
+				})
+		)
+	}
+}
+
+// sonarqube
+sonarqube {
+	properties {
+		property "sonar.projectKey", "dojindo_minipay-dohee"
+		property "sonar.organization", "dojindo"
+		property 'sonar.host.url', 'https://sonarcloud.io'
+		property 'sonar.sources', 'src'
+		property 'sonar.language', 'java'
+		property 'sonar.sourceEncoding', 'UTF-8'
+		property 'sonar.test.inclusions', '**/*Test.java'
+		property 'sonar.exclusions', '**/test/**, **/Q*.java, **/*Doc*.java, **/resources/**, **/*Application*.java, ' +
+				'**/*Config*.java, **/*Dto*.java, **/*Request*.java, **/*Response*.java, **/*Exception*.java, ' +
+				'**/*ErrorCode*.java, **/*BaseTimeEntity.java'
+		property 'sonar.java.coveragePlugin', 'jacoco'
+		property 'sonar.java.binaries', "${buildDir}/classes"
+		property 'sonar.coverage.jacoco.xmlReportPaths', "${buildDir}/reports/jacoco.xml"
+	}
+}
+
+// querydsl
+def querydslDir = 'src/main/generated'
+
+tasks.withType(JavaCompile).configureEach {
+	options.getGeneratedSourceOutputDirectory().set(file(querydslDir))
+}
+
+clean {
+	delete file(querydslDir)
 }
