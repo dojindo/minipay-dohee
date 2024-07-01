@@ -30,7 +30,7 @@ public class SavingAccount extends BaseTimeEntity {
     private SavingType savingType; // 이후 스탭에서 사용 예정
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id")
+    @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
     private SavingAccount(String accountNumber, Member member) {
