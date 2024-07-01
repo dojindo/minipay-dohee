@@ -30,7 +30,7 @@ public class CheckingAccount extends BaseTimeEntity {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    public CheckingAccount(String accountNumber, Member member) {
+    private CheckingAccount(String accountNumber, Member member) {
         this.accountNumber = accountNumber;
         this.member = member;
     }
