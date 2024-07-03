@@ -58,8 +58,4 @@ public class AccountNumberComponent {
 
         return sb.toString();
     }
-
-    private int getNextInt() {
-        return RANDOM.nextInt(10);
-    }
 }
