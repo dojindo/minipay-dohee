@@ -5,6 +5,7 @@ import com.jindo.minipay.account.checking.dto.ChargeResponse;
 import com.jindo.minipay.account.checking.dto.RemitRequest;
 import com.jindo.minipay.account.checking.dto.RemitResponse;
 import com.jindo.minipay.account.checking.service.CheckingAccountService;
+import com.jindo.minipay.account.checking.service.RemitService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class CheckingAccountController {
     private final CheckingAccountService checkingAccountService;
+    private final RemitService remitService;
 
     /**
      * 충전하기
@@ -35,6 +37,6 @@ public class CheckingAccountController {
     @PostMapping("/remit")
     public ResponseEntity<RemitResponse> remit(
             @RequestBody @Valid RemitRequest request) {
-        return ResponseEntity.ok(checkingAccountService.remit(request));
+        return ResponseEntity.ok(remitService.remit(request));
     }
 }
