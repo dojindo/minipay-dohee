@@ -6,6 +6,7 @@ import com.jindo.minipay.account.checking.dto.ChargeResponse;
 import com.jindo.minipay.account.checking.dto.RemitRequest;
 import com.jindo.minipay.account.checking.dto.RemitResponse;
 import com.jindo.minipay.account.checking.service.CheckingAccountService;
+import com.jindo.minipay.account.checking.service.RemitService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,13 +26,14 @@ class CheckingAccountControllerTest {
     @MockBean
     CheckingAccountService accountService;
 
+    @MockBean
+    RemitService remitService;
+
     @Autowired
     MockMvc mockMvc;
 
     @Autowired
     ObjectMapper objectMapper;
-    @Autowired
-    private CheckingAccountService checkingAccountService;
 
     @Test
     @DisplayName("메인 계좌에 충전한다.")
@@ -69,8 +71,7 @@ class CheckingAccountControllerTest {
 
         RemitResponse response = new RemitResponse(myAccountNumber, 5000L);
 
-        given(checkingAccountService.remit(request))
-                .willReturn(response);
+        given(remitService.remit(request)).willReturn(response);
 
         // when
         // then
