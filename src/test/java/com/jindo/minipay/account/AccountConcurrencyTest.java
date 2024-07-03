@@ -183,23 +183,7 @@ class AccountConcurrencyTest {
         @DisplayName("내가 친구에게 송금하는 요청과 친구가 나에게 송금하는 요청이 동시에 올 경우 모두 실패한다.")
         void concurrency_remit_deadlock() throws InterruptedException {
             // given
-            Member me = memberRepository.save(Member.builder()
-                    .email("test@test.com")
-                    .password("test12345")
-                    .name("tester1")
-                    .build());
-
-            Member receiver = memberRepository.save(Member.builder()
-                    .email("test2@test.com")
-                    .password("test12345")
-                    .name("tester1")
-                    .build());
-
-            checkingAccountRepository.save(
-                    CheckingAccount.of(myAccountNumber, me));
-
-            checkingAccountRepository.save(
-                    CheckingAccount.of(receiverAccountNumber, receiver));
+            setMeAndReceiver();
 
             RemitRequest request = RemitRequest.builder()
                     .myAccountNumber(myAccountNumber)
@@ -252,6 +236,116 @@ class AccountConcurrencyTest {
             assertEquals(0, receiverCheckingAccount.getBalance());
             assertInstanceOf(LockException.class, exceptions.get());
             assertEquals(2, exceptionCnt.get());
+        }
+
+        @Test
+        @DisplayName("친구에게 송금 요청과 친구가 충전하는 요청이 동시에 올 경우 차례로 실행된다.")
+        void concurrency_remit_charge() throws InterruptedException {
+            // given
+            setMeAndReceiver();
+
+            RemitRequest remitRequest = RemitRequest.builder()
+                    .myAccountNumber(myAccountNumber)
+                    .receiverAccountNumber(receiverAccountNumber)
+                    .amount(10000L)
+                    .build();
+
+            ChargeRequest chargeRequest =
+                    new ChargeRequest(receiverAccountNumber, 10000L);
+
+            // when
+            Thread thread = new Thread(() ->
+                    remitService.remit(remitRequest));
+
+            Thread thread2 = new Thread(() ->
+                    checkingAccountService.charge(chargeRequest));
+
+            thread.start();
+            thread2.start();
+
+            thread.join();
+            thread2.join();
+
+            // then
+            CheckingAccount myCheckingAccount =
+                    checkingAccountRepository.findByAccountNumber(myAccountNumber).get();
+
+            CheckingAccount receiverCheckingAccount =
+                    checkingAccountRepository.findByAccountNumber(receiverAccountNumber).get();
+
+            assertEquals(0, myCheckingAccount.getBalance());
+            assertEquals(20000, receiverCheckingAccount.getBalance());
+        }
+
+        @Test
+        @DisplayName("친구에게 송금 요청과 친구가 적금 납입하는 요청이 동시에 올 경우 차례로 실행된다.")
+        void concurrency_remit_payIn() throws InterruptedException {
+            // given
+            setMeAndReceiver();
+            Member receiver = memberRepository.findById(2L).get();
+            String savingAccountNumber = "8800-09-7654321";
+
+            savingAccountRepository.save(
+                    SavingAccount.of(savingAccountNumber, receiver));
+
+            // 친구 계좌 충전
+            checkingAccountService.charge(
+                    new ChargeRequest(receiverAccountNumber, 10000L));
+
+            RemitRequest remitRequest = RemitRequest.builder()
+                    .myAccountNumber(myAccountNumber)
+                    .receiverAccountNumber(receiverAccountNumber)
+                    .amount(10000L)
+                    .build();
+
+            PayInRequest payInRequest = PayInRequest.builder()
+                    .savingAccountNumber(savingAccountNumber)
+                    .checkingAccountNumber(receiverAccountNumber)
+                    .amount(10000L)
+                    .build();
+
+            // when
+            Thread thread = new Thread(() ->
+                    remitService.remit(remitRequest));
+
+            Thread thread2 = new Thread(() ->
+                    savingAccountService.payIn(payInRequest));
+
+            thread.start();
+            thread2.start();
+
+            thread.join();
+            thread2.join();
+
+            // then
+            CheckingAccount myCheckingAccount =
+                    checkingAccountRepository.findByAccountNumber(myAccountNumber).get();
+
+            CheckingAccount receiverCheckingAccount =
+                    checkingAccountRepository.findByAccountNumber(receiverAccountNumber).get();
+
+            assertEquals(0, myCheckingAccount.getBalance());
+            assertEquals(10000, receiverCheckingAccount.getBalance());
+        }
+
+        private void setMeAndReceiver() {
+            Member me = memberRepository.save(Member.builder()
+                    .email("test@test.com")
+                    .password("test12345")
+                    .name("tester1")
+                    .build());
+
+            Member receiver = memberRepository.save(Member.builder()
+                    .email("test2@test.com")
+                    .password("test12345")
+                    .name("tester1")
+                    .build());
+
+            checkingAccountRepository.save(
+                    CheckingAccount.of(myAccountNumber, me));
+
+            checkingAccountRepository.save(
+                    CheckingAccount.of(receiverAccountNumber, receiver));
         }
     }
 }
