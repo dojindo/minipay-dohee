@@ -48,15 +48,13 @@ public class AccountNumberComponent {
         StringBuilder sb = new StringBuilder();
         sb.append(accountType.getCode()).append("-");
 
-        for (int i = 0; i < MID_LENGTH; i++) {
-            sb.append(getNextInt());
-        }
+        sb.append(String.format("%02d",
+                RANDOM.nextInt((int) Math.pow(10, MID_LENGTH))));
 
         sb.append("-");
 
-        for (int i = 0; i < END_LENGTH; i++) {
-            sb.append(getNextInt());
-        }
+        sb.append(String.format("%07d",
+                RANDOM.nextInt((int) Math.pow(10, END_LENGTH))));
 
         return sb.toString();
     }
