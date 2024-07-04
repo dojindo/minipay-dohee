@@ -2,6 +2,7 @@ package com.jindo.minipay.account.checking.service;
 
 import com.jindo.minipay.account.checking.dto.ChargeRequest;
 import com.jindo.minipay.account.checking.dto.ChargeResponse;
+import com.jindo.minipay.account.checking.dto.RemitRequest;
 import com.jindo.minipay.account.checking.entity.CheckingAccount;
 import com.jindo.minipay.account.checking.repository.CheckingAccountRepository;
 import com.jindo.minipay.account.common.exception.AccountException;
@@ -32,6 +33,7 @@ public class CheckingAccountService {
     private final ValueOperations<String, Object> redisValueOps;
 
     private static final Integer DAILY_CHARGING_LIMIT = 3_000_000;
+    private static final int CHARGING_UNIT = 10_000;
 
     public void createAccount(Long memberId) {
         Member member = memberRepository.findById(memberId)
@@ -45,18 +47,57 @@ public class CheckingAccountService {
     @DistributedLock(keyField = "accountNumber")
     @Transactional
     public ChargeResponse charge(ChargeRequest request) {
-        CheckingAccount checkingAccount = checkingAccountRepository
-                .findByAccountNumberFetchJoin(request.accountNumber())
+        CheckingAccount checkingAccount =
+                getCheckingAccountOrThrow(request.accountNumber());
+
+        chargeToMyAccount(checkingAccount, request.amount());
+        return ChargeResponse.fromEntity(checkingAccount);
+    }
+
+    @DistributedLock(keyField = "myAccountNumber")
+    public CheckingAccount checkMyAccount(RemitRequest request) {
+        CheckingAccount myCheckingAccount =
+                getCheckingAccountOrThrow(request.myAccountNumber());
+
+        Long amount = request.amount();
+        autoChargingOrNot(amount, myCheckingAccount);
+
+        myCheckingAccount.decreaseBalance(amount);
+        return myCheckingAccount;
+    }
+
+    @DistributedLock(keyField = "receiverAccountNumber")
+    public void sendMoneyToReceiver(RemitRequest request) {
+        CheckingAccount receiverCheckingAccount = checkingAccountRepository
+                .findByAccountNumber(request.receiverAccountNumber())
                 .orElseThrow(() ->
                         new AccountException(ErrorCode.NOT_FOUND_ACCOUNT_NUMBER));
 
-        String email = checkingAccount.getMember().getEmail();
-        Long amount = request.amount();
+        receiverCheckingAccount.increaseBalance(request.amount());
+    }
 
+    private void autoChargingOrNot(Long amount, CheckingAccount checkingAccount) {
+        long balance = checkingAccount.getBalance();
+
+        if (balance < amount) {
+            long insufficientAmount = amount - balance;
+            long share = insufficientAmount / CHARGING_UNIT;
+            long remainder = insufficientAmount % CHARGING_UNIT;
+            long chargeAmount = share * CHARGING_UNIT;
+
+            if (remainder > 0) {
+                chargeAmount += CHARGING_UNIT;
+            }
+
+            chargeToMyAccount(checkingAccount, chargeAmount);
+        }
+    }
+
+    private void chargeToMyAccount(CheckingAccount checkingAccount, Long amount) {
+        String email = checkingAccount.getMember().getEmail();
         validateChargeLimit(email, amount);
 
         checkingAccount.increaseBalance(amount);
-        return ChargeResponse.fromEntity(checkingAccount);
     }
 
     private void validateChargeLimit(String email, Long amount) {
@@ -78,5 +119,12 @@ public class CheckingAccountService {
         LocalDateTime midnight = now.toLocalDate().plusDays(1).atStartOfDay();
         Duration duration = Duration.between(now, midnight);
         return duration.getSeconds();
+    }
+
+    private CheckingAccount getCheckingAccountOrThrow(String accountNumber) {
+        return checkingAccountRepository
+                .findByAccountNumberFetchJoin(accountNumber)
+                .orElseThrow(() ->
+                        new AccountException(ErrorCode.NOT_FOUND_ACCOUNT_NUMBER));
     }
 }
