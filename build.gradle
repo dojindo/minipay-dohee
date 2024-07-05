@@ -73,7 +73,6 @@ jacocoTestReport {
 		classDirectories.setFrom(
 				files(classDirectories.files.collect {
 					fileTree(dir: it, excludes: [
-							// 측정 안하고 싶은 패턴
 							"**/*Application*",
 							"**/*Config*",
 							"**/*Dto*",
@@ -82,7 +81,6 @@ jacocoTestReport {
 							"**/*Interceptor*",
 							"**/*Exception*",
 							"**/*BaseTimeEntity"
-							// Querydsl 관련 제거
 					] + Qdomains)
 				})
 		)
@@ -104,7 +102,7 @@ sonarqube {
 				'**/*ErrorCode*.java, **/*BaseTimeEntity.java'
 		property 'sonar.java.coveragePlugin', 'jacoco'
 		property 'sonar.java.binaries', "${buildDir}/classes"
-		property 'sonar.coverage.jacoco.xmlReportPaths', "${buildDir}/reports/jacoco.xml"
+		property 'sonar.coverage.jacoco.xmlReportPaths', "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
 	}
 }
 
