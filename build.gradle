@@ -63,18 +63,15 @@ for (qPattern in '**/QA'..'**/QZ') { // qPattern = '**/QA', '**/QB', ... '*.QZ'
 
 def excludePatterns = [
 		"**/*Application*",
-		"**/*Config*",
-		"**/*Exception*",
-		"**/*Request*",
-		"**/*Response*",
-		"**/*Dto*",
+		"**/config/**",
+		"**/exception/**",
+		"**/dto/**",
 		"**/*Interceptor*",
 		"**/*Filter*",
 		"**/*Resolver*",
 		"**/*Entity*",
-		"**/test/**",
 		"**/resources/**",
-		"**/*BaseTimeEntity"
+		"**/annotation/**"
 ] + Qdomains
 
 // jacoco
