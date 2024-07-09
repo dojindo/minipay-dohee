@@ -1,6 +1,7 @@
 package com.jindo.minipay.account.saving.service;
 
 import com.jindo.minipay.account.checking.entity.CheckingAccount;
+import com.jindo.minipay.account.checking.repository.CheckingAccountRepository;
 import com.jindo.minipay.account.common.exception.AccountException;
 import com.jindo.minipay.account.common.type.AccountType;
 import com.jindo.minipay.account.common.util.AccountNumberComponent;
@@ -35,6 +36,9 @@ import static org.mockito.Mockito.verify;
 class SavingAccountServiceTest {
     @Mock
     SavingAccountRepository accountRepository;
+
+    @Mock
+    CheckingAccountRepository checkingAccountRepository;
 
     @Mock
     MemberRepository memberRepository;
@@ -106,23 +110,26 @@ class SavingAccountServiceTest {
     @Nested
     @DisplayName("적금 계좌 납입 메서드")
     class PayInMethod {
+        String checkingAccountNumber = "8800-01-1234567";
         SavingAccount savingAccount = SavingAccount.of(accountNumber, member);
 
         CheckingAccount checkingAccount =
-                CheckingAccount.of("8800-01-1234567", member);
+                CheckingAccount.of(checkingAccountNumber, member);
 
         PayInRequest request = new PayInRequest(accountNumber,
-                "8888-01-1234567", 10000L);
+                checkingAccountNumber, 10000L);
 
         @Test
         @DisplayName("적금 계좌에 납입한다.")
         void payIn() {
             // given
             ReflectionTestUtils.setField(checkingAccount, "balance", 10000L);
-            ReflectionTestUtils.setField(member, "checkingAccount", checkingAccount);
 
-            given(accountRepository.findByAccountNumberFetchJoin(accountNumber))
+            given(accountRepository.findByAccountNumber(accountNumber))
                     .willReturn(Optional.of(savingAccount));
+
+            given(checkingAccountRepository.findByAccountNumber(checkingAccountNumber))
+                    .willReturn(Optional.of(checkingAccount));
 
             // when
             PayInResponse response = accountService.payIn(request);
@@ -135,7 +142,7 @@ class SavingAccountServiceTest {
         @DisplayName("존재하지 않는 적금 계좌이면 예외가 발생한다.")
         void payIn_notFound_accountNumber() {
             // given
-            given(accountRepository.findByAccountNumberFetchJoin(accountNumber))
+            given(accountRepository.findByAccountNumber(accountNumber))
                     .willReturn(Optional.empty());
 
             // when
@@ -150,10 +157,12 @@ class SavingAccountServiceTest {
         void payIn_insufficient_balance() {
             // given
             ReflectionTestUtils.setField(checkingAccount, "balance", 5000L);
-            ReflectionTestUtils.setField(member, "checkingAccount", checkingAccount);
 
-            given(accountRepository.findByAccountNumberFetchJoin(accountNumber))
+            given(accountRepository.findByAccountNumber(accountNumber))
                     .willReturn(Optional.of(savingAccount));
+
+            given(checkingAccountRepository.findByAccountNumber(checkingAccountNumber))
+                    .willReturn(Optional.of(checkingAccount));
 
             // when
             // then

@@ -1,6 +1,7 @@
 package com.jindo.minipay.account.saving.service;
 
 import com.jindo.minipay.account.checking.entity.CheckingAccount;
+import com.jindo.minipay.account.checking.repository.CheckingAccountRepository;
 import com.jindo.minipay.account.common.exception.AccountException;
 import com.jindo.minipay.account.common.type.AccountType;
 import com.jindo.minipay.account.common.util.AccountNumberComponent;
@@ -23,6 +24,7 @@ import static com.jindo.minipay.global.exception.ErrorCode.NOT_FOUND_MEMBER;
 @Service
 public class SavingAccountService {
     private final SavingAccountRepository savingAccountRepository;
+    private final CheckingAccountRepository checkingAccountRepository;
     private final MemberRepository memberRepository;
     private final AccountNumberComponent accountNumberComponent;
 
@@ -43,10 +45,13 @@ public class SavingAccountService {
     @Transactional
     public PayInResponse payIn(PayInRequest request) {
         SavingAccount savingAccount = savingAccountRepository
-                .findByAccountNumberFetchJoin(request.savingAccountNumber())
+                .findByAccountNumber(request.savingAccountNumber())
                 .orElseThrow(() -> new AccountException(NOT_FOUND_ACCOUNT_NUMBER));
 
-        CheckingAccount checkingAccount = savingAccount.getMember().getCheckingAccount();
+        CheckingAccount checkingAccount = checkingAccountRepository
+                .findByAccountNumber(request.checkingAccountNumber())
+                .orElseThrow(() -> new AccountException(NOT_FOUND_ACCOUNT_NUMBER));
+
         Long amount = request.amount();
 
         checkingAccount.decreaseBalance(amount);
