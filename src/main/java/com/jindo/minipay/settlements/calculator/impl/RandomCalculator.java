@@ -2,10 +2,11 @@ package com.jindo.minipay.settlements.calculator.impl;
 
 import com.jindo.minipay.settlements.calculator.Calculator;
 
+import java.security.SecureRandom;
 import java.util.*;
 
 public class RandomCalculator implements Calculator {
-    private static final Random RANDOM = new Random();
+    private static final Random RANDOM = new SecureRandom();
     private static final int UNIT = 100;
     private static final int MIN_TOTAL_AMOUNT = 500;
 
