@@ -1,0 +1,32 @@
+### 정산 금액 계산
+POST http://localhost:8080/api/v1/settlements/calculate
+Content-Type: application/json
+
+{
+  "settlementType": "DUTCH_PAY",
+  "totalAmount": 35000,
+  "numOfParticipants": 3,
+  "requesterId": 1
+}
+
+### 정산 요청
+POST http://localhost:8080/api/v1/settlements
+Content-Type: application/json
+
+{
+  "settlementType": "RANDOM",
+  "totalAmount": 35000,
+  "numOfParticipants": 2,
+  "requesterId": 1,
+  "participants": [
+    {
+      "participantId": 1,
+      "requestAmount": 25000
+    },
+    {
+      "participantId": 2,
+      "requestAmount": 10000
+    }
+  ],
+  "remainingAmount": 0
+}

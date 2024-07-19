@@ -7,6 +7,7 @@ import com.jindo.minipay.account.saving.repository.SavingAccountRepository;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 
+import java.security.SecureRandom;
 import java.util.EnumMap;
 import java.util.Random;
 
@@ -16,7 +17,7 @@ import static com.jindo.minipay.account.common.type.AccountType.SAVINGS;
 @Getter
 @Component
 public class AccountNumberComponent {
-    private static final Random RANDOM = new Random();
+    private static final Random RANDOM = new SecureRandom();
     private static final int MID_LENGTH = 2;
     private static final int END_LENGTH = 7;
 
