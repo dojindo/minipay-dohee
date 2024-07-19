@@ -57,11 +57,6 @@ class SettlementServiceTest {
                 .requesterId(1L)
                 .build();
 
-        static Stream<Arguments> provideRequestAmounts() {
-            return Stream.of(Arguments.of(List.of()),
-                    Arguments.of(List.of(10000L)));
-        }
-
         @ParameterizedTest
         @ValueSource(strings = {"DUTCH_PAY", "RANDOM"})
         @DisplayName("타입별로 정산 금액을 계산한다.")
@@ -102,6 +97,11 @@ class SettlementServiceTest {
             assertThatThrownBy(() -> settlementService.settleCalculate(request))
                     .isInstanceOf(SettlementException.class)
                     .hasMessageContaining(NOT_FOUND_MEMBER.getMessage());
+        }
+
+        static Stream<Arguments> provideRequestAmounts() {
+            return Stream.of(Arguments.of(List.of()),
+                    Arguments.of(List.of(10000L)));
         }
 
         @ParameterizedTest
@@ -162,26 +162,6 @@ class SettlementServiceTest {
                         .name("tester2")
                         .build());
 
-        static Stream<Arguments> provideRequest() {
-            return Stream.of(
-                    Arguments.of(10L, 12,
-                            INSUFFICIENT_SETTLE_AMOUNT.getMessage()),
-                    Arguments.of(100000L, 2,
-                            INCORRECT_TOTAL_AMOUNT.getMessage())
-            );
-        }
-
-        static Stream<Arguments> provideParticipants() {
-            return Stream.of(
-                    Arguments.of(List.of()),
-                    Arguments.of(List.of(Member.builder()
-                            .email("test2@test.com")
-                            .password("test12345")
-                            .name("tester2")
-                            .build()))
-            );
-        }
-
         @Test
         @DisplayName("정산 금액으로 정산을 요청한다.")
         void settleAccounts() {
@@ -203,6 +183,15 @@ class SettlementServiceTest {
             assertEquals(2, response.participants().size());
             verify(settlementRepository, times(1))
                     .save(any());
+        }
+
+        static Stream<Arguments> provideRequest() {
+            return Stream.of(
+                    Arguments.of(10L, 12,
+                            INSUFFICIENT_SETTLE_AMOUNT.getMessage()),
+                    Arguments.of(100000L, 2,
+                            INCORRECT_TOTAL_AMOUNT.getMessage())
+            );
         }
 
         @ParameterizedTest
@@ -229,6 +218,17 @@ class SettlementServiceTest {
             assertThatThrownBy(() -> settlementService.settleAccounts(request))
                     .isInstanceOf(SettlementException.class)
                     .hasMessageContaining(errorMessage);
+        }
+
+        static Stream<Arguments> provideParticipants() {
+            return Stream.of(
+                    Arguments.of(List.of()),
+                    Arguments.of(List.of(Member.builder()
+                            .email("test2@test.com")
+                            .password("test12345")
+                            .name("tester2")
+                            .build()))
+            );
         }
 
         @ParameterizedTest

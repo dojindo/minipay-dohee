@@ -18,13 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 class RandomCalculatorTest {
     static Calculator calculator = CalculatorFactory.of(SettlementType.RANDOM);
 
-    static Stream<Arguments> provideNumOfParticipantsAndTotalAmount() {
-        return Stream.of(
-                Arguments.of(400, 2),
-                Arguments.of(11, 10)
-        );
-    }
-
     @Test
     @DisplayName("랜덤 정산 금액을 계산한다.")
     void calculateAmount() {
@@ -40,6 +33,13 @@ class RandomCalculatorTest {
 
         assertNotEquals(requestAmounts.get(0), requestAmounts.get(1));
         assertEquals(30000L, sumAmounts);
+    }
+
+    static Stream<Arguments> provideNumOfParticipantsAndTotalAmount() {
+        return Stream.of(
+                Arguments.of(400, 2),
+                Arguments.of(11, 10)
+        );
     }
 
     @ParameterizedTest
