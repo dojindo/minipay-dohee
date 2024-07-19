@@ -39,7 +39,7 @@ public class Settlement extends BaseTimeEntity {
     @Column(nullable = false)
     private SettlementStatus settlementStatus;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requester_id", nullable = false)
     private Member requester;
 

@@ -19,10 +19,7 @@ public record SettleCalculateResponse(
                                              List<Long> requestAmounts) {
         long remainingAmount = 0;
         if (settlementType == SettlementType.DUTCH_PAY) {
-            long sumOfRequestAmounts = requestAmounts.stream()
-                    .mapToLong(o -> o)
-                    .sum();
-            remainingAmount = totalAmount - sumOfRequestAmounts;
+            remainingAmount = totalAmount % numOfParticipants;
         }
 
         return SettleCalculateResponse.builder()
