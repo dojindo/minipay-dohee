@@ -72,10 +72,6 @@ public class DistributedLockAspect {
                     }
                 }
             }
-
-            if (!keys.isEmpty()) {
-                break;
-            }
         }
 
         return keys;
