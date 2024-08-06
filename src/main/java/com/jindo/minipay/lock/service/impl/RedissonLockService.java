@@ -18,7 +18,7 @@ import static com.jindo.minipay.global.exception.ErrorCode.RESOURCE_LOCKED;
 @Service
 public class RedissonLockService implements LockService {
     private final RedissonClient redissonClient;
-    private static final String KEY_PREFIX = "RSLK:";
+    private static final String KEY_PREFIX = "RLOCK:";
 
     @Override
     public void getLock(String key, Long waitTime, Long releaseTime) {
