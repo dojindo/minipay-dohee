@@ -3,6 +3,7 @@ package com.jindo.minipay.account.checking.service;
 import com.jindo.minipay.account.checking.dto.ChargeRequest;
 import com.jindo.minipay.account.checking.dto.ChargeResponse;
 import com.jindo.minipay.account.checking.dto.RemitRequest;
+import com.jindo.minipay.account.checking.dto.RemitResponse;
 import com.jindo.minipay.account.checking.entity.CheckingAccount;
 import com.jindo.minipay.account.checking.repository.CheckingAccountRepository;
 import com.jindo.minipay.account.common.exception.AccountException;
@@ -10,6 +11,7 @@ import com.jindo.minipay.account.common.type.AccountType;
 import com.jindo.minipay.account.common.util.AccountNumberComponent;
 import com.jindo.minipay.global.exception.ErrorCode;
 import com.jindo.minipay.lock.annotation.DistributedLock;
+import com.jindo.minipay.lock.annotation.DistributedMultiLock;
 import com.jindo.minipay.member.entity.Member;
 import com.jindo.minipay.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,7 @@ public class CheckingAccountService {
 
     private static final Integer DAILY_CHARGING_LIMIT = 3_000_000;
     private static final int CHARGING_UNIT = 10_000;
+    private static final String CHARGE_KEY_PREFIX = "CHARGE:";
 
     public void createAccount(Long memberId) {
         Member member = memberRepository.findById(memberId)
@@ -54,8 +57,15 @@ public class CheckingAccountService {
         return ChargeResponse.fromEntity(checkingAccount);
     }
 
-    @DistributedLock(keyField = "myAccountNumber")
-    public CheckingAccount checkMyAccount(RemitRequest request) {
+    @DistributedMultiLock(keyFields = {"myAccountNumber", "receiverAccountNumber"})
+    @Transactional
+    public RemitResponse remit(RemitRequest request) {
+        CheckingAccount myCheckingAccount = checkMyAccount(request);
+        sendMoneyToReceiver(request);
+        return RemitResponse.fromEntity(myCheckingAccount);
+    }
+
+    private CheckingAccount checkMyAccount(RemitRequest request) {
         CheckingAccount myCheckingAccount =
                 getCheckingAccountOrThrow(request.myAccountNumber());
 
@@ -66,8 +76,7 @@ public class CheckingAccountService {
         return myCheckingAccount;
     }
 
-    @DistributedLock(keyField = "receiverAccountNumber")
-    public void sendMoneyToReceiver(RemitRequest request) {
+    private void sendMoneyToReceiver(RemitRequest request) {
         CheckingAccount receiverCheckingAccount = checkingAccountRepository
                 .findByAccountNumber(request.receiverAccountNumber())
                 .orElseThrow(() ->
@@ -101,16 +110,17 @@ public class CheckingAccountService {
     }
 
     private void validateChargeLimit(String email, Long amount) {
-        Integer accumulatedAmount = (Integer) redisValueOps.get(email);
+        String key = CHARGE_KEY_PREFIX + email;
+        Integer accumulatedAmount = (Integer) redisValueOps.get(key);
 
         if (accumulatedAmount != null) {
             if (accumulatedAmount + amount > DAILY_CHARGING_LIMIT) {
                 throw new AccountException(EXCEEDED_DAILY_CHARGING_LIMIT);
             }
-            redisValueOps.increment(email, amount);
+            redisValueOps.increment(key, amount);
         } else {
             long secondsUntilMidnight = getSecondsUntilMidnight();
-            redisValueOps.set(email, amount, secondsUntilMidnight, TimeUnit.SECONDS);
+            redisValueOps.set(key, amount, secondsUntilMidnight, TimeUnit.SECONDS);
         }
     }
 

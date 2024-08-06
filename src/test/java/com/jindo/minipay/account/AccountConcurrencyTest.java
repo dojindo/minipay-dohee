@@ -5,7 +5,6 @@ import com.jindo.minipay.account.checking.dto.RemitRequest;
 import com.jindo.minipay.account.checking.entity.CheckingAccount;
 import com.jindo.minipay.account.checking.repository.CheckingAccountRepository;
 import com.jindo.minipay.account.checking.service.CheckingAccountService;
-import com.jindo.minipay.account.checking.service.RemitService;
 import com.jindo.minipay.account.common.exception.AccountException;
 import com.jindo.minipay.account.saving.dto.PayInRequest;
 import com.jindo.minipay.account.saving.entity.SavingAccount;
@@ -26,11 +25,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
@@ -50,9 +47,6 @@ class AccountConcurrencyTest {
 
     @Autowired
     CheckingAccountRepository checkingAccountRepository;
-
-    @Autowired
-    RemitService remitService;
 
     @Test
     @DisplayName("적금 계좌 납입과 메인 계좌 충전 요청이 동시에 올 경우 차례로 실행된다.")
@@ -159,7 +153,7 @@ class AccountConcurrencyTest {
             IntStream.range(0, threadCount).forEach(i ->
                     executorService.submit(() -> {
                         try {
-                            remitService.remit(RemitRequest.builder()
+                            checkingAccountService.remit(RemitRequest.builder()
                                     .myAccountNumber(accountNumbers[i])
                                     .receiverAccountNumber(receiverAccountNumber)
                                     .amount(10000L)
@@ -182,10 +176,18 @@ class AccountConcurrencyTest {
         }
 
         @Test
-        @DisplayName("내가 친구에게 송금하는 요청과 친구가 나에게 송금하는 요청이 동시에 올 경우 모두 실패한다.")
+        @DisplayName("내가 친구에게 송금하는 요청과 친구가 나에게 송금하는 요청이 동시에 올 경우 차례로 실행된다.")
         void concurrency_remit_deadlock() throws InterruptedException {
             // given
             setMeAndReceiver();
+
+            // 내 계좌 충전
+            checkingAccountService.charge(
+                    new ChargeRequest(myAccountNumber, 10000L));
+
+            // 친구 계좌 충전
+            checkingAccountService.charge(
+                    new ChargeRequest(receiverAccountNumber, 10000L));
 
             RemitRequest request = RemitRequest.builder()
                     .myAccountNumber(myAccountNumber)
@@ -200,23 +202,20 @@ class AccountConcurrencyTest {
                     .build();
 
             // when
-            AtomicReference<Exception> exceptions = new AtomicReference<>();
             AtomicInteger exceptionCnt = new AtomicInteger();
 
             Thread thread = new Thread(() -> {
                 try {
-                    remitService.remit(request);
+                    checkingAccountService.remit(request);
                 } catch (LockException e) {
-                    exceptions.set(e);
                     exceptionCnt.getAndIncrement();
                 }
             });
 
             Thread thread2 = new Thread(() -> {
                 try {
-                    remitService.remit(request2);
+                    checkingAccountService.remit(request2);
                 } catch (LockException e) {
-                    exceptions.set(e);
                     exceptionCnt.getAndIncrement();
                 }
             });
@@ -234,10 +233,9 @@ class AccountConcurrencyTest {
             CheckingAccount receiverCheckingAccount =
                     checkingAccountRepository.findByAccountNumber(receiverAccountNumber).get();
 
-            assertEquals(0, myCheckingAccount.getBalance());
-            assertEquals(0, receiverCheckingAccount.getBalance());
-            assertInstanceOf(LockException.class, exceptions.get());
-            assertEquals(2, exceptionCnt.get());
+            assertEquals(10000L, myCheckingAccount.getBalance());
+            assertEquals(10000L, receiverCheckingAccount.getBalance());
+            assertEquals(0, exceptionCnt.get());
         }
 
         @Test
@@ -257,7 +255,7 @@ class AccountConcurrencyTest {
 
             // when
             Thread thread = new Thread(() ->
-                    remitService.remit(remitRequest));
+                    checkingAccountService.remit(remitRequest));
 
             Thread thread2 = new Thread(() ->
                     checkingAccountService.charge(chargeRequest));
@@ -308,7 +306,7 @@ class AccountConcurrencyTest {
 
             // when
             Thread thread = new Thread(() ->
-                    remitService.remit(remitRequest));
+                    checkingAccountService.remit(remitRequest));
 
             Thread thread2 = new Thread(() ->
                     savingAccountService.payIn(payInRequest));
