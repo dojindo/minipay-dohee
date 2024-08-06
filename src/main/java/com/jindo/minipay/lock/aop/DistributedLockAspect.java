@@ -45,13 +45,9 @@ public class DistributedLockAspect {
         List<String> keys = parseMultiKey(joinPoint, annotation);
         keys.sort(Comparator.naturalOrder());
 
-        keys.forEach(key -> {
-            try {
-                lockService.getLock(key, annotation.waitTime(), annotation.releaseTime());
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        for (String key : keys) {
+            lockService.getLock(key, annotation.waitTime(), annotation.releaseTime());
+        }
 
         TransactionSynchronizationManager.registerSynchronization(
                 CustomTransactionSynchronization.ofMultiKey(lockService, keys));

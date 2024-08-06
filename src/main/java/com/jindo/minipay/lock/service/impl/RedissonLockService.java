@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.jindo.minipay.global.exception.ErrorCode.INTERNAL_ERROR;
 import static com.jindo.minipay.global.exception.ErrorCode.RESOURCE_LOCKED;
 
 @Slf4j
@@ -20,7 +21,7 @@ public class RedissonLockService implements LockService {
     private static final String KEY_PREFIX = "RSLK:";
 
     @Override
-    public void getLock(String key, Long waitTime, Long releaseTime) throws InterruptedException {
+    public void getLock(String key, Long waitTime, Long releaseTime) {
         RLock lock = redissonClient.getLock(getKey(key));
 
         try {
@@ -32,7 +33,7 @@ public class RedissonLockService implements LockService {
                 throw new LockException(RESOURCE_LOCKED);
             }
         } catch (InterruptedException e) {
-            throw new InterruptedException();
+            throw new LockException(INTERNAL_ERROR, e.getMessage());
         }
     }
 
