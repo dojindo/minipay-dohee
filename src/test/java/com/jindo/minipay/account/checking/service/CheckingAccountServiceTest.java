@@ -58,6 +58,8 @@ class CheckingAccountServiceTest {
 
     CheckingAccount account = CheckingAccount.of(accountNumber, member);
 
+    String CHARGE_KEY_PREFIX = "CHARGE:";
+
     @Nested
     @DisplayName("메인 계좌 생성 메서드")
     class CreateAccountMethod {
@@ -117,7 +119,7 @@ class CheckingAccountServiceTest {
             given(accountRepository.findByAccountNumberFetchJoin(accountNumber))
                     .willReturn(Optional.of(account));
 
-            given(redisValueOps.get(member.getEmail()))
+            given(redisValueOps.get(CHARGE_KEY_PREFIX + member.getEmail()))
                     .willReturn(null);
 
             doNothing().when(redisValueOps)
@@ -155,7 +157,7 @@ class CheckingAccountServiceTest {
             given(accountRepository.findByAccountNumberFetchJoin(accountNumber))
                     .willReturn(Optional.of(account));
 
-            given(redisValueOps.get(member.getEmail()))
+            given(redisValueOps.get(CHARGE_KEY_PREFIX + member.getEmail()))
                     .willReturn(accumulatedAmount);
 
             // when
@@ -211,7 +213,7 @@ class CheckingAccountServiceTest {
             given(accountRepository.findByAccountNumber(receiverAccountNumber))
                     .willReturn(Optional.of(receiverCheckingAccount));
 
-            given(redisValueOps.get(member.getEmail()))
+            given(redisValueOps.get(CHARGE_KEY_PREFIX + member.getEmail()))
                     .willReturn(null);
 
             doNothing().when(redisValueOps)
