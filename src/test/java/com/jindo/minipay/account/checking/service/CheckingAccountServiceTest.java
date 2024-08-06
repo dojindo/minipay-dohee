@@ -58,7 +58,7 @@ class CheckingAccountServiceTest {
 
     CheckingAccount account = CheckingAccount.of(accountNumber, member);
 
-    String CHARGE_KEY_PREFIX = "CHARGE:";
+    static final String CHARGE_KEY_PREFIX = "CHARGE:";
 
     @Nested
     @DisplayName("메인 계좌 생성 메서드")
