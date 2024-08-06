@@ -36,6 +36,7 @@ public class CheckingAccountService {
 
     private static final Integer DAILY_CHARGING_LIMIT = 3_000_000;
     private static final int CHARGING_UNIT = 10_000;
+    private static final String CHARGE_KEY_PREFIX = "CHARGE:";
 
     public void createAccount(Long memberId) {
         Member member = memberRepository.findById(memberId)
@@ -109,16 +110,17 @@ public class CheckingAccountService {
     }
 
     private void validateChargeLimit(String email, Long amount) {
-        Integer accumulatedAmount = (Integer) redisValueOps.get(email);
+        String key = CHARGE_KEY_PREFIX + email;
+        Integer accumulatedAmount = (Integer) redisValueOps.get(key);
 
         if (accumulatedAmount != null) {
             if (accumulatedAmount + amount > DAILY_CHARGING_LIMIT) {
                 throw new AccountException(EXCEEDED_DAILY_CHARGING_LIMIT);
             }
-            redisValueOps.increment(email, amount);
+            redisValueOps.increment(key, amount);
         } else {
             long secondsUntilMidnight = getSecondsUntilMidnight();
-            redisValueOps.set(email, amount, secondsUntilMidnight, TimeUnit.SECONDS);
+            redisValueOps.set(key, amount, secondsUntilMidnight, TimeUnit.SECONDS);
         }
     }
 
