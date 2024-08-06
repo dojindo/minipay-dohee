@@ -33,6 +33,8 @@ public class RedissonLockService implements LockService {
                 throw new LockException(RESOURCE_LOCKED);
             }
         } catch (InterruptedException e) {
+            log.error("this thread is interrupted");
+            Thread.currentThread().interrupt();
             throw new LockException(INTERNAL_ERROR, e.getMessage());
         }
     }
