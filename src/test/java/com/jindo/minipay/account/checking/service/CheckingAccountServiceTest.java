@@ -3,6 +3,7 @@ package com.jindo.minipay.account.checking.service;
 import com.jindo.minipay.account.checking.dto.ChargeRequest;
 import com.jindo.minipay.account.checking.dto.ChargeResponse;
 import com.jindo.minipay.account.checking.dto.RemitRequest;
+import com.jindo.minipay.account.checking.dto.RemitResponse;
 import com.jindo.minipay.account.checking.entity.CheckingAccount;
 import com.jindo.minipay.account.checking.repository.CheckingAccountRepository;
 import com.jindo.minipay.account.common.exception.AccountException;
@@ -173,7 +174,7 @@ class CheckingAccountServiceTest {
 
         RemitRequest request = RemitRequest.builder()
                 .myAccountNumber(myAccountNumber)
-                .receiverAccountNumber("8888-02-7654321")
+                .receiverAccountNumber(receiverAccountNumber)
                 .amount(12000L)
                 .build();
 
@@ -181,30 +182,34 @@ class CheckingAccountServiceTest {
                 CheckingAccount.of(receiverAccountNumber, null);
 
         @Test
-        @DisplayName("메인 계좌의 잔액을 확인하고, 차감한다.")
-        void checkMyAccount() {
+        @DisplayName("내 계좌를 확인하고, 친구에게 송금한다.")
+        void remit() {
             // given
             ReflectionTestUtils.setField(account, "balance", 12000L);
 
             given(accountRepository.findByAccountNumberFetchJoin(accountNumber))
                     .willReturn(Optional.of(account));
 
+            given(accountRepository.findByAccountNumber(receiverAccountNumber))
+                    .willReturn(Optional.of(receiverCheckingAccount));
+
             // when
-            CheckingAccount myCheckingAccount = accountService.checkMyAccount(request);
+            RemitResponse response = accountService.remit(request);
 
             // then
-            assertEquals(0, myCheckingAccount.getBalance());
+            assertEquals(0, response.balance());
             verify(redisValueOps, times(0)).get(any());
         }
 
         @Test
-        @DisplayName("메인 계좌의 잔액을 확인 시, 부족한 경우 자동 충전한다.")
+        @DisplayName("내 계좌 잔액 확인 시, 부족한 경우 자동 충전한다.")
         void remit_autoCharging() {
             // given
-            ReflectionTestUtils.setField(account, "balance", 10000L);
-
             given(accountRepository.findByAccountNumberFetchJoin(accountNumber))
                     .willReturn(Optional.of(account));
+
+            given(accountRepository.findByAccountNumber(receiverAccountNumber))
+                    .willReturn(Optional.of(receiverCheckingAccount));
 
             given(redisValueOps.get(member.getEmail()))
                     .willReturn(null);
@@ -213,10 +218,10 @@ class CheckingAccountServiceTest {
                     .set(any(), any(), anyLong(), any());
 
             // when
-            CheckingAccount myCheckingAccount = accountService.checkMyAccount(request);
+            RemitResponse response = accountService.remit(request);
 
             // then
-            assertEquals(8000, myCheckingAccount.getBalance());
+            assertEquals(8000, response.balance());
             verify(redisValueOps, times(1))
                     .set(any(), any(), anyLong(), any());
         }
@@ -230,37 +235,24 @@ class CheckingAccountServiceTest {
 
             // when
             // then
-            assertThatThrownBy(() -> accountService.checkMyAccount(request))
+            assertThatThrownBy(() -> accountService.remit(request))
                     .isInstanceOf(AccountException.class)
                     .hasMessageMatching(NOT_FOUND_ACCOUNT_NUMBER.getMessage());
-        }
-
-        @Test
-        @DisplayName("친구 계좌로 송금한다.")
-        void remit() {
-            // given
-            given(accountRepository.findByAccountNumber(receiverAccountNumber))
-                    .willReturn(Optional.of(receiverCheckingAccount));
-
-            // when
-            accountService.sendMoneyToReceiver(request);
-
-            // then
-            assertEquals(12000, receiverCheckingAccount.getBalance());
-            verify(accountRepository, times(1))
-                    .findByAccountNumber(anyString());
         }
 
         @Test
         @DisplayName("친구 계좌를 찾을 수 없으면 예외가 발생한다.")
         void remit_notFount_receiverAccountNumber() {
             // given
+            given(accountRepository.findByAccountNumberFetchJoin(accountNumber))
+                    .willReturn(Optional.of(account));
+
             given(accountRepository.findByAccountNumber(receiverAccountNumber))
                     .willReturn(Optional.empty());
 
             // when
             // then
-            assertThatThrownBy(() -> accountService.sendMoneyToReceiver(request))
+            assertThatThrownBy(() -> accountService.remit(request))
                     .isInstanceOf(AccountException.class)
                     .hasMessageMatching(NOT_FOUND_ACCOUNT_NUMBER.getMessage());
         }
