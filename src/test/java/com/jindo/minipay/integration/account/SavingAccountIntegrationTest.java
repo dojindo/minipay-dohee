@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("적금 계좌 통합테스트")
-public class SavingAccountIntegrationTest extends BaseIntegrationTest {
+class SavingAccountIntegrationTest extends BaseIntegrationTest {
     static final String URL = "/api/v1/account/saving";
 
     @Test

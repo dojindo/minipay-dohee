@@ -16,7 +16,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
 @DisplayName("정산 통합테스트")
-public class SettlementIntegrationTest extends BaseIntegrationTest {
+class SettlementIntegrationTest extends BaseIntegrationTest {
     static final String URL = "/api/v1/settlements";
 
     @Test

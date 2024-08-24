@@ -13,7 +13,7 @@ import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("회원 통합테스트")
-public class MemberIntegrationTest extends BaseIntegrationTest {
+class MemberIntegrationTest extends BaseIntegrationTest {
     static final String URL = "/api/v1/members";
 
     @Test
