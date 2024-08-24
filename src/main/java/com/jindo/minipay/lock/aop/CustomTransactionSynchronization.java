@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class CustomTransactionSynchronization  implements TransactionSynchronization {
+public class CustomTransactionSynchronization implements TransactionSynchronization {
     private final LockService lockService;
     private final String key;
     private final List<String> keys;

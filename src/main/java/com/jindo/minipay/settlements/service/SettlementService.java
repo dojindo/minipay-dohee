@@ -60,15 +60,6 @@ public class SettlementService {
         if (request.numOfParticipants() > request.totalAmount()) {
             throw new SettlementException(INSUFFICIENT_SETTLE_AMOUNT);
         }
-
-        // totalAmount 확인
-        Long sumAmount = request.participants().stream()
-                .mapToLong(SettleAccountsRequest.ParticipantRequest::requestAmount)
-                .sum();
-
-        if (!sumAmount.equals(request.totalAmount())) {
-            throw new SettlementException(INCORRECT_TOTAL_AMOUNT);
-        }
     }
 
     private List<Member> getParticipantsOrThrow(SettleAccountsRequest request) {
