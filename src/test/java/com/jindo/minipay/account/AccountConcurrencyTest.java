@@ -3,24 +3,20 @@ package com.jindo.minipay.account;
 import com.jindo.minipay.account.checking.dto.ChargeRequest;
 import com.jindo.minipay.account.checking.dto.RemitRequest;
 import com.jindo.minipay.account.checking.entity.CheckingAccount;
-import com.jindo.minipay.account.checking.repository.CheckingAccountRepository;
 import com.jindo.minipay.account.checking.service.CheckingAccountService;
 import com.jindo.minipay.account.common.exception.AccountException;
 import com.jindo.minipay.account.saving.dto.PayInRequest;
 import com.jindo.minipay.account.saving.entity.SavingAccount;
-import com.jindo.minipay.account.saving.repository.SavingAccountRepository;
 import com.jindo.minipay.account.saving.service.SavingAccountService;
+import com.jindo.minipay.integration.BaseIntegrationTest;
 import com.jindo.minipay.lock.exception.LockException;
 import com.jindo.minipay.member.entity.Member;
-import com.jindo.minipay.member.repository.MemberRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
 
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,25 +24,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@SpringBootTest
-class AccountConcurrencyTest {
-    @Autowired
-    MemberRepository memberRepository;
-
+class AccountConcurrencyTest extends BaseIntegrationTest {
     @Autowired
     SavingAccountService savingAccountService;
 
     @Autowired
-    SavingAccountRepository savingAccountRepository;
-
-    @Autowired
     CheckingAccountService checkingAccountService;
-
-    @Autowired
-    CheckingAccountRepository checkingAccountRepository;
 
     @Test
     @DisplayName("적금 계좌 납입과 메인 계좌 충전 요청이 동시에 올 경우 차례로 실행된다.")
@@ -63,11 +48,11 @@ class AccountConcurrencyTest {
         long amount = 10000L;
 
         // 메인 계좌
-        checkingAccountRepository.save(
+        CheckingAccount checkingAccount = checkingAccountRepository.save(
                 CheckingAccount.of(checkingAccountNumber, member));
 
         // 적금 계좌
-        savingAccountRepository.save(
+        SavingAccount savingAccount = savingAccountRepository.save(
                 SavingAccount.of(savingAccountNumber, member));
 
         // request
@@ -101,11 +86,17 @@ class AccountConcurrencyTest {
         executorService.shutdown();
 
         // then
-        CheckingAccount checkingAccount = checkingAccountRepository.findById(1L).get();
-        SavingAccount savingAccount = savingAccountRepository.findById(1L).get();
+        Optional<CheckingAccount> findCheckingAccount =
+                checkingAccountRepository.findById(checkingAccount.getId());
 
-        assertEquals(0, checkingAccount.getBalance());
-        assertEquals(threadCount * amount, savingAccount.getAmount());
+        Optional<SavingAccount> findSavingAccount =
+                savingAccountRepository.findById(savingAccount.getId());
+
+        assertTrue(findCheckingAccount.isPresent());
+        assertTrue(findSavingAccount.isPresent());
+
+        assertEquals(0, findCheckingAccount.get().getBalance());
+        assertEquals(threadCount * amount, findSavingAccount.get().getAmount());
     }
 
     @Nested
@@ -281,8 +272,7 @@ class AccountConcurrencyTest {
         @DisplayName("친구에게 송금 요청과 친구가 적금 납입하는 요청이 동시에 올 경우 차례로 실행된다.")
         void concurrency_remit_payIn() throws InterruptedException {
             // given
-            setMeAndReceiver();
-            Member receiver = memberRepository.findById(2L).get();
+            Member receiver = setMeAndReceiver();
             String savingAccountNumber = "8800-09-7654321";
 
             savingAccountRepository.save(
@@ -328,7 +318,7 @@ class AccountConcurrencyTest {
             assertEquals(10000, receiverCheckingAccount.getBalance());
         }
 
-        private void setMeAndReceiver() {
+        private Member setMeAndReceiver() {
             Member me = memberRepository.save(Member.builder()
                     .email("test@test.com")
                     .password("test12345")
@@ -346,6 +336,8 @@ class AccountConcurrencyTest {
 
             checkingAccountRepository.save(
                     CheckingAccount.of(receiverAccountNumber, receiver));
+
+            return receiver;
         }
     }
 }

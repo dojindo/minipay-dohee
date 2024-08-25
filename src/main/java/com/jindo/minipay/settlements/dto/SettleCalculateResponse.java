@@ -1,5 +1,7 @@
 package com.jindo.minipay.settlements.dto;
 
+import com.jindo.minipay.global.exception.ErrorCode;
+import com.jindo.minipay.settlements.exception.SettlementException;
 import com.jindo.minipay.settlements.type.SettlementType;
 import lombok.Builder;
 
@@ -20,6 +22,11 @@ public record SettleCalculateResponse(
         long remainingAmount = 0;
         if (settlementType == SettlementType.DUTCH_PAY) {
             remainingAmount = totalAmount % numOfParticipants;
+        }
+
+        long sumOfRequest = requestAmounts.stream().mapToLong(o -> o).sum();
+        if (sumOfRequest + remainingAmount != totalAmount) {
+            throw new SettlementException(ErrorCode.INCORRECT_TOTAL_AMOUNT);
         }
 
         return SettleCalculateResponse.builder()

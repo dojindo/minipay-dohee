@@ -185,26 +185,14 @@ class SettlementServiceTest {
                     .save(any());
         }
 
-        static Stream<Arguments> provideRequest() {
-            return Stream.of(
-                    Arguments.of(10L, 12,
-                            INSUFFICIENT_SETTLE_AMOUNT.getMessage()),
-                    Arguments.of(100000L, 2,
-                            INCORRECT_TOTAL_AMOUNT.getMessage())
-            );
-        }
-
-        @ParameterizedTest
-        @MethodSource("provideRequest")
-        @DisplayName("정산 금액보다 정산 인원수가 많거나 정산 금액이 요청 금액의 합과 맞지 않으면 예외가 발생한다.")
-        void settleAccounts_invalid_request(Long totalAmount,
-                                            int numOfParticipants,
-                                            String errorMessage) {
+        @Test
+        @DisplayName("정산 금액보다 정산 인원수가 많으면 예외가 발생한다.")
+        void settleAccounts_invalid_request() {
             // given
             SettleAccountsRequest request = SettleAccountsRequest.builder()
                     .settlementType("RANDOM")
-                    .totalAmount(totalAmount)
-                    .numOfParticipants(numOfParticipants)
+                    .totalAmount(10L)
+                    .numOfParticipants(12)
                     .requesterId(1L)
                     .participants(List.of(new SettleAccountsRequest
                                     .ParticipantRequest(1L, 10000L),
@@ -217,7 +205,7 @@ class SettlementServiceTest {
             // then
             assertThatThrownBy(() -> settlementService.settleAccounts(request))
                     .isInstanceOf(SettlementException.class)
-                    .hasMessageContaining(errorMessage);
+                    .hasMessageContaining(INSUFFICIENT_SETTLE_AMOUNT.getMessage());
         }
 
         static Stream<Arguments> provideParticipants() {

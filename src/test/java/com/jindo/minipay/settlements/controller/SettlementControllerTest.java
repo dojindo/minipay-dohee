@@ -48,7 +48,7 @@ class SettlementControllerTest {
 
         SettleCalculateResponse response = SettleCalculateResponse.builder()
                 .settlementType(SettlementType.DUTCH_PAY)
-                .numOfParticipants(2)
+                .numOfParticipants(3)
                 .totalAmount(35000L)
                 .requestAmounts(List.of(11666L, 11666L))
                 .remainingAmount(2)
@@ -66,7 +66,7 @@ class SettlementControllerTest {
                 .andExpect(jsonPath("$.settlementType")
                         .value("DUTCH_PAY"))
                 .andExpect(jsonPath("$.numOfParticipants")
-                        .value(2))
+                        .value(3))
                 .andExpect(jsonPath("$.totalAmount")
                         .value(35000))
                 .andExpect(jsonPath("$.requestAmounts[0]")
