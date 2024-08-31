@@ -1,6 +1,5 @@
 package com.jindo.minipay.settlements.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jindo.minipay.global.annotation.ValidEnum;
 import com.jindo.minipay.member.entity.Member;
 import com.jindo.minipay.settlements.entity.Settlement;
@@ -30,21 +29,14 @@ public record SettleAccountsRequest(
         @Valid
         List<ParticipantRequest> participants, // 요청자 포함
 
-        long remainingAmount,
-
-        @JsonIgnore
-        SettlementType settleTypeEnum
+        long remainingAmount
 ) {
-    public SettleAccountsRequest {
-        settleTypeEnum = SettlementType.of(settlementType);
-    }
-
     public Settlement toEntity(Member requester) {
         return Settlement.builder()
                 .numOfParticipants(numOfParticipants)
                 .totalAmount(totalAmount)
                 .remainingAmount(remainingAmount)
-                .settlementType(settleTypeEnum)
+                .settlementType(SettlementType.of(settlementType))
                 .requester(requester)
                 .build();
     }

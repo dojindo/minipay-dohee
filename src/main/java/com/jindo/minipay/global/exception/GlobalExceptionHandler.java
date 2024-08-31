@@ -7,26 +7,37 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.List;
+
 import static com.jindo.minipay.global.exception.ErrorCode.INTERNAL_ERROR;
 import static com.jindo.minipay.global.exception.ErrorCode.INVALID_REQUEST;
 
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final String ARG_VALID_MSG = "%s 필드의(는) %s (전달된 값: %s)";
+
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ErrorResponse> handleCustomException(CustomException e) {
         return ErrorResponse.of(e.getErrorCode(), e.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
+    public ResponseEntity<ErrorResponse.ErrorResponseArray> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException e) {
-        FieldError fieldError = e.getFieldErrors().get(0);
-        String errorMessage = String.format("%s 필드의(는) %s (전달된 값: %s)",
-                fieldError.getField(),
-                fieldError.getDefaultMessage(),
-                fieldError.getRejectedValue());
-        return ErrorResponse.of(INVALID_REQUEST, errorMessage);
+        List<FieldError> fieldErrors = e.getFieldErrors();
+        String[] errorMessages = new String[fieldErrors.size()];
+
+        for (int i = 0; i < fieldErrors.size(); i++) {
+            FieldError fieldError = fieldErrors.get(i);
+            String errorMessage = String.format(ARG_VALID_MSG,
+                    fieldError.getField(),
+                    fieldError.getDefaultMessage(),
+                    fieldError.getRejectedValue());
+            errorMessages[i] = errorMessage;
+        }
+
+        return ErrorResponse.ofArray(INVALID_REQUEST, errorMessages);
     }
 
     @ExceptionHandler(RuntimeException.class)

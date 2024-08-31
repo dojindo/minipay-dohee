@@ -34,8 +34,8 @@ public class SettlementService {
         List<Long> requestAmounts = calculateAmount(request);
         validateCalculateAmount(request, requestAmounts);
 
-        return SettleCalculateResponse.of(request.settleTypeEnum(),
-                request.numOfParticipants(), request.totalAmount(),
+        return SettleCalculateResponse.of(request.getSettlementType(),
+                request.getNumOfParticipants(), request.getTotalAmount(),
                 requestAmounts);
     }
 
@@ -56,9 +56,14 @@ public class SettlementService {
     }
 
     private void validateSettlementAmount(SettleAccountsRequest request) {
-        // 금액 대비 참여자 수 확인
-        if (request.numOfParticipants() > request.totalAmount()) {
-            throw new SettlementException(INSUFFICIENT_SETTLE_AMOUNT);
+        // totalAmount 확인
+        long sumAmount = request.participants().stream()
+                .mapToLong(SettleAccountsRequest.ParticipantRequest::requestAmount)
+                .sum();
+        sumAmount += request.remainingAmount();
+
+        if (sumAmount != request.totalAmount()) {
+            throw new SettlementException(INCORRECT_TOTAL_AMOUNT);
         }
     }
 
@@ -106,19 +111,19 @@ public class SettlementService {
     private void validateCalculateAmount(SettleCalculateRequest request,
                                          List<Long> requestAmounts) {
         if (requestAmounts.isEmpty() ||
-                requestAmounts.size() != request.numOfParticipants()) {
+                requestAmounts.size() != request.getNumOfParticipants()) {
             throw new SettlementException(INTERNAL_ERROR);
         }
     }
 
     private List<Long> calculateAmount(SettleCalculateRequest request) {
-        Calculator calculator = CalculatorFactory.of(request.settleTypeEnum());
-        return calculator.calculateAmount(request.numOfParticipants(),
-                request.totalAmount());
+        Calculator calculator = CalculatorFactory.of(request.getSettlementType());
+        return calculator.calculateAmount(request.getNumOfParticipants(),
+                request.getTotalAmount());
     }
 
     private void validateRequester(SettleCalculateRequest request) {
-        if (!memberRepository.existsById(request.requesterId())) {
+        if (!memberRepository.existsById(request.getRequesterId())) {
             throw new SettlementException(NOT_FOUND_MEMBER);
         }
     }

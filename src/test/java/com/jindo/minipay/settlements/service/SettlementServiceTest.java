@@ -186,26 +186,28 @@ class SettlementServiceTest {
         }
 
         @Test
-        @DisplayName("정산 금액보다 정산 인원수가 많으면 예외가 발생한다.")
+        @DisplayName("정산 요청 금액의 합계와 총 금액이 맞지 않으면 예외가 발생한다.")
         void settleAccounts_invalid_request() {
             // given
             SettleAccountsRequest request = SettleAccountsRequest.builder()
-                    .settlementType("RANDOM")
-                    .totalAmount(10L)
-                    .numOfParticipants(12)
+                    .settlementType("DUTCH_PAY")
+                    .totalAmount(10000L)
+                    .numOfParticipants(3)
                     .requesterId(1L)
                     .participants(List.of(new SettleAccountsRequest
-                                    .ParticipantRequest(1L, 10000L),
+                                    .ParticipantRequest(1L, 3000L),
                             new SettleAccountsRequest
-                                    .ParticipantRequest(2L, 25000L)))
-                    .remainingAmount(0)
+                                    .ParticipantRequest(2L, 3333L),
+                            new SettleAccountsRequest
+                                    .ParticipantRequest(3L, 3333L)))
+                    .remainingAmount(1)
                     .build();
 
             // when
             // then
             assertThatThrownBy(() -> settlementService.settleAccounts(request))
                     .isInstanceOf(SettlementException.class)
-                    .hasMessageContaining(INSUFFICIENT_SETTLE_AMOUNT.getMessage());
+                    .hasMessageContaining(INCORRECT_TOTAL_AMOUNT.getMessage());
         }
 
         static Stream<Arguments> provideParticipants() {

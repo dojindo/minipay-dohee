@@ -89,7 +89,7 @@ public class CheckingAccountService {
         long balance = checkingAccount.getBalance();
 
         if (balance < amount) {
-            long insufficientAmount = amount - balance;
+            long insufficientAmount = amount - balance; // 부족한 금액
             long share = insufficientAmount / CHARGING_UNIT;
             long remainder = insufficientAmount % CHARGING_UNIT;
             long chargeAmount = share * CHARGING_UNIT;
@@ -103,9 +103,7 @@ public class CheckingAccountService {
     }
 
     private void chargeToMyAccount(CheckingAccount checkingAccount, Long amount) {
-        String email = checkingAccount.getMember().getEmail();
-        validateChargeLimit(email, amount);
-
+        validateChargeLimit(checkingAccount.getMember().getEmail(), amount);
         checkingAccount.increaseBalance(amount);
     }
 

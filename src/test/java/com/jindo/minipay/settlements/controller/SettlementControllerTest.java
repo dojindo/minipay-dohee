@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -48,13 +49,13 @@ class SettlementControllerTest {
 
         SettleCalculateResponse response = SettleCalculateResponse.builder()
                 .settlementType(SettlementType.DUTCH_PAY)
-                .numOfParticipants(3)
+                .numOfParticipants(2)
                 .totalAmount(35000L)
-                .requestAmounts(List.of(11666L, 11666L))
-                .remainingAmount(2)
+                .requestAmounts(List.of(17500L, 17500L))
+                .remainingAmount(0)
                 .build();
 
-        given(settlementService.settleCalculate(request))
+        given(settlementService.settleCalculate(any()))
                 .willReturn(response);
 
         // when
@@ -66,13 +67,13 @@ class SettlementControllerTest {
                 .andExpect(jsonPath("$.settlementType")
                         .value("DUTCH_PAY"))
                 .andExpect(jsonPath("$.numOfParticipants")
-                        .value(3))
+                        .value(2))
                 .andExpect(jsonPath("$.totalAmount")
                         .value(35000))
                 .andExpect(jsonPath("$.requestAmounts[0]")
-                        .value(11666))
+                        .value(17500))
                 .andExpect(jsonPath("$.remainingAmount")
-                        .value(2))
+                        .value(0))
                 .andDo(print());
     }
 
