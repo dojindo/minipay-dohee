@@ -70,7 +70,6 @@ def excludePatterns = [
 		"**/*Interceptor*",
 		"**/*Filter*",
 		"**/*Resolver*",
-		"**/*Entity*",
 		"**/resources/**",
 		"**/annotation/**"
 ] + Qdomains

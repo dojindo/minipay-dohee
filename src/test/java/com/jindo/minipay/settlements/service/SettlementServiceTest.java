@@ -62,7 +62,7 @@ class SettlementServiceTest {
         @DisplayName("타입별로 정산 금액을 계산한다.")
         void settleCalculate(String settlementType) {
             // given
-            SettleCalculateRequest request = SettleCalculateRequest.builder()
+            SettleCalculateRequest settleCalculateRequest = SettleCalculateRequest.builder()
                     .settlementType(settlementType)
                     .totalAmount(35000L)
                     .numOfParticipants(3)
@@ -74,7 +74,7 @@ class SettlementServiceTest {
 
             // when
             SettleCalculateResponse response =
-                    settlementService.settleCalculate(request);
+                    settlementService.settleCalculate(settleCalculateRequest);
 
             // then
             long sumAmount = response.requestAmounts().stream()
@@ -189,7 +189,7 @@ class SettlementServiceTest {
         @DisplayName("정산 요청 금액의 합계와 총 금액이 맞지 않으면 예외가 발생한다.")
         void settleAccounts_invalid_request() {
             // given
-            SettleAccountsRequest request = SettleAccountsRequest.builder()
+            SettleAccountsRequest settleAccountsRequest = SettleAccountsRequest.builder()
                     .settlementType("DUTCH_PAY")
                     .totalAmount(10000L)
                     .numOfParticipants(3)
@@ -205,7 +205,7 @@ class SettlementServiceTest {
 
             // when
             // then
-            assertThatThrownBy(() -> settlementService.settleAccounts(request))
+            assertThatThrownBy(() -> settlementService.settleAccounts(settleAccountsRequest))
                     .isInstanceOf(SettlementException.class)
                     .hasMessageContaining(INCORRECT_TOTAL_AMOUNT.getMessage());
         }
