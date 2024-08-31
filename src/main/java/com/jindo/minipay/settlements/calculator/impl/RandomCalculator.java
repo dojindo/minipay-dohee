@@ -23,7 +23,7 @@ public class RandomCalculator implements Calculator {
             for (int i = 0; i < numOfParticipants - 1; i++) {
                 long num = RANDOM.nextLong(UNIT, amount);
                 amount = Math.min(num, amount - num);
-                amount = getAmount(amount);
+                amount = amountUnitsCut(amount);
 
                 sumAmount += amount;
                 requestAmounts.add(amount);
@@ -40,7 +40,7 @@ public class RandomCalculator implements Calculator {
         return requestAmounts;
     }
 
-    private static long getAmount(long amount) { // 100 단위 절삭
+    private static long amountUnitsCut(long amount) { // 100 단위 절삭
         return amount > UNIT ? amount / UNIT * UNIT : amount;
     }
 }
