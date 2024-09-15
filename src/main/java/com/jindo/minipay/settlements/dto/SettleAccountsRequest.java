@@ -7,7 +7,6 @@ import com.jindo.minipay.settlements.type.SettlementType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.Builder;
-import lombok.NonNull;
 
 import java.util.List;
 
@@ -16,10 +15,10 @@ public record SettleAccountsRequest(
         @NotBlank @ValidEnum(target = SettlementType.class)
         String settlementType,
 
-        @NonNull @Min(1) @Max(5_000_000)
+        @NotNull @Min(1) @Max(5_000_000)
         Long totalAmount,
 
-        @NonNull @Min(1) @Max(50)
+        @NotNull @Min(1) @Max(50)
         Integer numOfParticipants,
 
         @NotNull

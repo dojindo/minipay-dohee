@@ -1,6 +1,6 @@
 package com.jindo.minipay.settlements.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jindo.minipay.global.annotation.ValidEnum;
 import com.jindo.minipay.settlements.type.SettlementType;
 import jakarta.validation.constraints.Max;
@@ -28,19 +28,19 @@ public class SettleCalculateRequest {
     @NotNull
     private Long requesterId;
 
-    @JsonProperty
+    @JsonIgnore
     private SettlementType settlementTypeEnum;
-
-    public void setSettlementType() {
-        if (StringUtils.hasText(settlementType)) {
-            settlementTypeEnum = SettlementType.of(settlementType);
-        }
-    }
 
     public SettlementType getSettlementType() {
         if (settlementTypeEnum == null) {
             setSettlementType();
         }
         return settlementTypeEnum;
+    }
+
+    private void setSettlementType() {
+        if (StringUtils.hasText(settlementType)) {
+            settlementTypeEnum = SettlementType.of(settlementType);
+        }
     }
 }
