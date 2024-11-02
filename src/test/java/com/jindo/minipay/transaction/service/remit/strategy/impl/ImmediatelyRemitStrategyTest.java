@@ -3,9 +3,9 @@ package com.jindo.minipay.transaction.service.remit.strategy.impl;
 import com.jindo.minipay.account.checking.entity.CheckingAccount;
 import com.jindo.minipay.account.checking.repository.CheckingAccountRepository;
 import com.jindo.minipay.account.checking.service.charge.ChargeService;
-import com.jindo.minipay.account.common.exception.AccountException;
 import com.jindo.minipay.member.entity.Member;
 import com.jindo.minipay.transaction.dto.RemitRequest;
+import com.jindo.minipay.transaction.exception.TransactionException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -92,7 +92,7 @@ class ImmediatelyRemitStrategyTest {
         // when
         // then
         assertThatThrownBy(() -> immediatelyRemitStrategy.remit(request, sender.getEmail()))
-                .isInstanceOf(AccountException.class)
+                .isInstanceOf(TransactionException.class)
                 .hasMessageMatching(NOT_FOUND_ACCOUNT_NUMBER.getMessage());
     }
 
@@ -114,7 +114,7 @@ class ImmediatelyRemitStrategyTest {
         // when
         // then
         assertThatThrownBy(() -> immediatelyRemitStrategy.remit(request, sender.getEmail()))
-                .isInstanceOf(AccountException.class)
+                .isInstanceOf(TransactionException.class)
                 .hasMessageMatching(NOT_FOUND_ACCOUNT_NUMBER.getMessage());
     }
 }
