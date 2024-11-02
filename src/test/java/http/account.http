@@ -24,13 +24,3 @@ Content-Type: application/json
   "checkingAccountNumber": "8888-30-2104037",
   "amount": 5000
 }
-
-### 친구 계좌로 송금
-POST http://localhost:8080/api/v1/account/checking/remit
-Content-Type: application/json
-
-{
-  "myAccountNumber": "8888-60-8082444",
-  "receiverAccountNumber": "8888-44-8427001",
-  "amount": 24000
-}
