@@ -36,6 +36,7 @@ public class CheckingAccount extends BaseTimeEntity {
     }
 
     public static CheckingAccount of(String accountNumber, Member member) {
+        member.addAccountNumber(accountNumber);
         return new CheckingAccount(accountNumber, member);
     }
 
