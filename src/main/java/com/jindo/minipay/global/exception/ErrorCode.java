@@ -13,6 +13,10 @@ public enum ErrorCode {
     ALREADY_EXISTS_MEMBER(BAD_REQUEST, "이미 가입된 회원입니다."),
     NOT_FOUND_MEMBER(NOT_FOUND, "존재하지 않는 회원입니다."),
 
+    // setting
+    NOT_FOUND_SETTING(NOT_FOUND, "회원 설정 정보가 없습니다."),
+    INVALID_REMIT_SETTING_TYPE(BAD_REQUEST, "잘못된 송금 설정 타입입니다."),
+
     // account
     NOT_FOUND_ACCOUNT_NUMBER(NOT_FOUND, "존재하지 않는 계좌번호입니다."),
     EXCEEDED_DAILY_CHARGING_LIMIT(BAD_REQUEST, "1일 충전 한도를 초과했습니다."),
