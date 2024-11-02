@@ -3,8 +3,8 @@ package com.jindo.minipay.transaction.service.remit.strategy;
 import com.jindo.minipay.account.checking.entity.CheckingAccount;
 import com.jindo.minipay.account.checking.repository.CheckingAccountRepository;
 import com.jindo.minipay.account.checking.service.charge.ChargeService;
-import com.jindo.minipay.account.common.exception.AccountException;
 import com.jindo.minipay.transaction.dto.RemitRequest;
+import com.jindo.minipay.transaction.exception.TransactionException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.util.Pair;
 
@@ -33,6 +33,6 @@ public abstract class RemitStrategy {
     public final CheckingAccount getCheckingAccountOrThrow(String accountNumber) {
         return checkingAccountRepository
                 .findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new AccountException(NOT_FOUND_ACCOUNT_NUMBER));
+                .orElseThrow(() -> new TransactionException(NOT_FOUND_ACCOUNT_NUMBER));
     }
 }

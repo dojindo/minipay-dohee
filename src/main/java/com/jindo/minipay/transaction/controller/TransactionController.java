@@ -1,7 +1,9 @@
 package com.jindo.minipay.transaction.controller;
 
+import com.jindo.minipay.account.common.exception.AccountException;
 import com.jindo.minipay.transaction.dto.RemitRequest;
 import com.jindo.minipay.transaction.dto.RemitResponse;
+import com.jindo.minipay.transaction.exception.TransactionException;
 import com.jindo.minipay.transaction.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,11 @@ public class TransactionController {
     @PostMapping("/remit")
     public ResponseEntity<RemitResponse> remit(
             @RequestBody @Valid RemitRequest request) {
-        return ResponseEntity.ok(transactionService.remit(request));
+        try {
+            return ResponseEntity.ok(transactionService.remit(request));
+        } catch (TransactionException | AccountException e) {
+            transactionService.saveRemitFailed(request);
+            throw e;
+        }
     }
 }
