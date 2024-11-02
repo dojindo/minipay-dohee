@@ -17,7 +17,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TransactionIntegrationTest extends BaseIntegrationTest {
+class TransactionIntegrationTest extends BaseIntegrationTest {
     static final String URL = "/api/v1/transactions";
 
     @Test

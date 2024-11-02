@@ -106,7 +106,6 @@ class CheckingAccountServiceTest {
     @DisplayName("메인 계좌에 충전한다.")
     void charge() {
         // given
-        String accountNumber = "8888-01-1234567";
         ChargeRequest request = new ChargeRequest(accountNumber, 10000L);
 
         // when
