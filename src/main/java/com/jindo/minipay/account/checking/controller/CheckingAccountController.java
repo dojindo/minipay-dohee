@@ -2,8 +2,6 @@ package com.jindo.minipay.account.checking.controller;
 
 import com.jindo.minipay.account.checking.dto.ChargeRequest;
 import com.jindo.minipay.account.checking.dto.ChargeResponse;
-import com.jindo.minipay.account.checking.dto.RemitRequest;
-import com.jindo.minipay.account.checking.dto.RemitResponse;
 import com.jindo.minipay.account.checking.service.CheckingAccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,16 +26,5 @@ public class CheckingAccountController {
     public ResponseEntity<ChargeResponse> charge(
             @RequestBody @Valid ChargeRequest request) {
         return ResponseEntity.ok(checkingAccountService.charge(request));
-    }
-
-    /**
-     * 송금하기 (자동 충전)
-     * @param request 내 계좌, 수신 계좌, 금액
-     * @return 내 계좌, 잔액
-     */
-    @PostMapping("/remit")
-    public ResponseEntity<RemitResponse> remit(
-            @RequestBody @Valid RemitRequest request) {
-        return ResponseEntity.ok(checkingAccountService.remit(request));
     }
 }
