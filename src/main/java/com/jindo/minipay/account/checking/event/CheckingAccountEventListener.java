@@ -1,5 +1,6 @@
 package com.jindo.minipay.account.checking.event;
 
+import com.jindo.minipay.account.checking.event.dto.CreateCheckingAccountEvent;
 import com.jindo.minipay.account.checking.service.CheckingAccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

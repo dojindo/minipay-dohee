@@ -24,10 +24,16 @@ public class Member extends BaseTimeEntity {
     @Column(nullable = false)
     private String name;
 
+    private String accountNumber; // 메인 계좌번호
+
     @Builder
     public Member(String email, String password, String name) {
         this.email = email;
         this.password = password;
         this.name = name;
+    }
+
+    public void addAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
     }
 }

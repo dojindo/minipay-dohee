@@ -1,7 +1,6 @@
 package com.jindo.minipay.member.service;
 
-import com.jindo.minipay.account.checking.event.CheckingAccountEventPublisher;
-import com.jindo.minipay.account.checking.event.CreateCheckingAccountEvent;
+import com.jindo.minipay.account.checking.event.dto.CreateCheckingAccountEvent;
 import com.jindo.minipay.member.dto.RegisterRequest;
 import com.jindo.minipay.member.entity.Member;
 import com.jindo.minipay.member.exception.MemberException;
@@ -13,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static com.jindo.minipay.global.exception.ErrorCode.ALREADY_EXISTS_MEMBER;
@@ -28,7 +28,7 @@ class MemberServiceTest {
     MemberRepository memberRepository;
 
     @Mock
-    CheckingAccountEventPublisher accountEventPublisher;
+    ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     MemberService memberService;
@@ -55,7 +55,7 @@ class MemberServiceTest {
             ReflectionTestUtils.setField(member, "id", 1L);
 
             CreateCheckingAccountEvent event =
-                    CreateCheckingAccountEvent.of(1L);
+                    new CreateCheckingAccountEvent(1L);
 
             given(memberRepository.existsByEmail(request.email()))
                     .willReturn(false);
@@ -63,15 +63,15 @@ class MemberServiceTest {
             given(memberRepository.save(any()))
                     .willReturn(member);
 
-            doNothing().when(accountEventPublisher).publishCreateCheckingAccount(event);
+            doNothing().when(eventPublisher).publishEvent(event);
 
             // when
             Long memberId = memberService.register(request);
 
             // then
             assertEquals(1L, memberId);
-            verify(accountEventPublisher, times(1))
-                    .publishCreateCheckingAccount(event);
+            verify(eventPublisher, times(1))
+                    .publishEvent(event);
         }
 
         @Test

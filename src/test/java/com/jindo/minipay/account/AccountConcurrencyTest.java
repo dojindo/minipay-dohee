@@ -1,7 +1,6 @@
 package com.jindo.minipay.account;
 
 import com.jindo.minipay.account.checking.dto.ChargeRequest;
-import com.jindo.minipay.account.checking.dto.RemitRequest;
 import com.jindo.minipay.account.checking.entity.CheckingAccount;
 import com.jindo.minipay.account.checking.service.CheckingAccountService;
 import com.jindo.minipay.account.common.exception.AccountException;
@@ -11,6 +10,9 @@ import com.jindo.minipay.account.saving.service.SavingAccountService;
 import com.jindo.minipay.integration.BaseIntegrationTest;
 import com.jindo.minipay.lock.exception.LockException;
 import com.jindo.minipay.member.entity.Member;
+import com.jindo.minipay.setting.entity.Setting;
+import com.jindo.minipay.transaction.dto.RemitRequest;
+import com.jindo.minipay.transaction.service.TransactionService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -32,6 +34,9 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
 
     @Autowired
     CheckingAccountService checkingAccountService;
+
+    @Autowired
+    TransactionService transactionService;
 
     @Test
     @DisplayName("적금 계좌 납입과 메인 계좌 충전 요청이 동시에 올 경우 차례로 실행된다.")
@@ -102,7 +107,7 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
     @Nested
     @DisplayName("송금하기")
     class RemitMethod {
-        String myAccountNumber = "8888-01-1234567";
+        String senderAccountNumber = "8888-01-1234567";
         String receiverAccountNumber = "8888-02-7654321";
 
         @Test
@@ -120,6 +125,9 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
             checkingAccountRepository.save(
                     CheckingAccount.of(receiverAccountNumber, receiver));
 
+            memberRepository.save(receiver);
+            settingRepository.save(Setting.create(receiver));
+
             String[] accountNumbers = new String[threadCount];
 
             for (int i = 0; i < threadCount; i++) {
@@ -134,6 +142,9 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
                 checkingAccountRepository.save(
                         CheckingAccount.of(accountNumber, member));
 
+                memberRepository.save(member);
+                settingRepository.save(Setting.create(member));
+
                 accountNumbers[i] = accountNumber;
             }
 
@@ -144,8 +155,8 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
             IntStream.range(0, threadCount).forEach(i ->
                     executorService.submit(() -> {
                         try {
-                            checkingAccountService.remit(RemitRequest.builder()
-                                    .myAccountNumber(accountNumbers[i])
+                            transactionService.remit(RemitRequest.builder()
+                                    .senderAccountNumber(accountNumbers[i])
                                     .receiverAccountNumber(receiverAccountNumber)
                                     .amount(10000L)
                                     .build());
@@ -170,25 +181,25 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
         @DisplayName("내가 친구에게 송금하는 요청과 친구가 나에게 송금하는 요청이 동시에 올 경우 차례로 실행된다.")
         void concurrency_remit_deadlock() throws InterruptedException {
             // given
-            setMeAndReceiver();
+            setSenderAndReceiver();
 
             // 내 계좌 충전
             checkingAccountService.charge(
-                    new ChargeRequest(myAccountNumber, 10000L));
+                    new ChargeRequest(senderAccountNumber, 10000L));
 
             // 친구 계좌 충전
             checkingAccountService.charge(
                     new ChargeRequest(receiverAccountNumber, 10000L));
 
             RemitRequest request = RemitRequest.builder()
-                    .myAccountNumber(myAccountNumber)
+                    .senderAccountNumber(senderAccountNumber)
                     .receiverAccountNumber(receiverAccountNumber)
                     .amount(10000L)
                     .build();
 
             RemitRequest request2 = RemitRequest.builder()
-                    .myAccountNumber(receiverAccountNumber)
-                    .receiverAccountNumber(myAccountNumber)
+                    .senderAccountNumber(receiverAccountNumber)
+                    .receiverAccountNumber(senderAccountNumber)
                     .amount(10000L)
                     .build();
 
@@ -197,7 +208,7 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
 
             Thread thread = new Thread(() -> {
                 try {
-                    checkingAccountService.remit(request);
+                    transactionService.remit(request);
                 } catch (LockException e) {
                     exceptionCnt.getAndIncrement();
                 }
@@ -205,7 +216,7 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
 
             Thread thread2 = new Thread(() -> {
                 try {
-                    checkingAccountService.remit(request2);
+                    transactionService.remit(request2);
                 } catch (LockException e) {
                     exceptionCnt.getAndIncrement();
                 }
@@ -218,13 +229,13 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
             thread2.join();
 
             // then
-            CheckingAccount myCheckingAccount =
-                    checkingAccountRepository.findByAccountNumber(myAccountNumber).get();
+            CheckingAccount senderCheckingAccount =
+                    checkingAccountRepository.findByAccountNumber(senderAccountNumber).get();
 
             CheckingAccount receiverCheckingAccount =
                     checkingAccountRepository.findByAccountNumber(receiverAccountNumber).get();
 
-            assertEquals(10000L, myCheckingAccount.getBalance());
+            assertEquals(10000L, senderCheckingAccount.getBalance());
             assertEquals(10000L, receiverCheckingAccount.getBalance());
             assertEquals(0, exceptionCnt.get());
         }
@@ -233,10 +244,10 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
         @DisplayName("친구에게 송금 요청과 친구가 충전하는 요청이 동시에 올 경우 차례로 실행된다.")
         void concurrency_remit_charge() throws InterruptedException {
             // given
-            setMeAndReceiver();
+            setSenderAndReceiver();
 
             RemitRequest remitRequest = RemitRequest.builder()
-                    .myAccountNumber(myAccountNumber)
+                    .senderAccountNumber(senderAccountNumber)
                     .receiverAccountNumber(receiverAccountNumber)
                     .amount(10000L)
                     .build();
@@ -246,7 +257,7 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
 
             // when
             Thread thread = new Thread(() ->
-                    checkingAccountService.remit(remitRequest));
+                    transactionService.remit(remitRequest));
 
             Thread thread2 = new Thread(() ->
                     checkingAccountService.charge(chargeRequest));
@@ -258,13 +269,13 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
             thread2.join();
 
             // then
-            CheckingAccount myCheckingAccount =
-                    checkingAccountRepository.findByAccountNumber(myAccountNumber).get();
+            CheckingAccount senderCheckingAccount =
+                    checkingAccountRepository.findByAccountNumber(senderAccountNumber).get();
 
             CheckingAccount receiverCheckingAccount =
                     checkingAccountRepository.findByAccountNumber(receiverAccountNumber).get();
 
-            assertEquals(0, myCheckingAccount.getBalance());
+            assertEquals(0, senderCheckingAccount.getBalance());
             assertEquals(20000, receiverCheckingAccount.getBalance());
         }
 
@@ -272,7 +283,7 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
         @DisplayName("친구에게 송금 요청과 친구가 적금 납입하는 요청이 동시에 올 경우 차례로 실행된다.")
         void concurrency_remit_payIn() throws InterruptedException {
             // given
-            Member receiver = setMeAndReceiver();
+            Member receiver = setSenderAndReceiver();
             String savingAccountNumber = "8800-09-7654321";
 
             savingAccountRepository.save(
@@ -283,7 +294,7 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
                     new ChargeRequest(receiverAccountNumber, 10000L));
 
             RemitRequest remitRequest = RemitRequest.builder()
-                    .myAccountNumber(myAccountNumber)
+                    .senderAccountNumber(senderAccountNumber)
                     .receiverAccountNumber(receiverAccountNumber)
                     .amount(10000L)
                     .build();
@@ -296,7 +307,7 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
 
             // when
             Thread thread = new Thread(() ->
-                    checkingAccountService.remit(remitRequest));
+                    transactionService.remit(remitRequest));
 
             Thread thread2 = new Thread(() ->
                     savingAccountService.payIn(payInRequest));
@@ -308,18 +319,18 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
             thread2.join();
 
             // then
-            CheckingAccount myCheckingAccount =
-                    checkingAccountRepository.findByAccountNumber(myAccountNumber).get();
+            CheckingAccount senderCheckingAccount =
+                    checkingAccountRepository.findByAccountNumber(senderAccountNumber).get();
 
             CheckingAccount receiverCheckingAccount =
                     checkingAccountRepository.findByAccountNumber(receiverAccountNumber).get();
 
-            assertEquals(0, myCheckingAccount.getBalance());
+            assertEquals(0, senderCheckingAccount.getBalance());
             assertEquals(10000, receiverCheckingAccount.getBalance());
         }
 
-        private Member setMeAndReceiver() {
-            Member me = memberRepository.save(Member.builder()
+        private Member setSenderAndReceiver() {
+            Member sender = memberRepository.save(Member.builder()
                     .email("test@test.com")
                     .password("test12345")
                     .name("tester1")
@@ -332,11 +343,16 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
                     .build());
 
             checkingAccountRepository.save(
-                    CheckingAccount.of(myAccountNumber, me));
+                    CheckingAccount.of(senderAccountNumber, sender));
 
             checkingAccountRepository.save(
                     CheckingAccount.of(receiverAccountNumber, receiver));
 
+            memberRepository.save(sender);
+            memberRepository.save(receiver);
+
+            settingRepository.save(Setting.create(sender));
+            settingRepository.save(Setting.create(receiver));
             return receiver;
         }
     }

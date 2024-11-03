@@ -1,12 +1,13 @@
 package com.jindo.minipay.member.service;
 
-import com.jindo.minipay.account.checking.event.CheckingAccountEventPublisher;
-import com.jindo.minipay.account.checking.event.CreateCheckingAccountEvent;
+import com.jindo.minipay.account.checking.event.dto.CreateCheckingAccountEvent;
 import com.jindo.minipay.member.dto.RegisterRequest;
 import com.jindo.minipay.member.entity.Member;
 import com.jindo.minipay.member.exception.MemberException;
 import com.jindo.minipay.member.repository.MemberRepository;
+import com.jindo.minipay.setting.event.dto.CreateSettingEvent;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,7 +17,7 @@ import static com.jindo.minipay.global.exception.ErrorCode.ALREADY_EXISTS_MEMBER
 @Service
 public class MemberService {
     private final MemberRepository memberRepository;
-    private final CheckingAccountEventPublisher accountEventPublisher;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public Long register(RegisterRequest request) {
@@ -25,8 +26,8 @@ public class MemberService {
         Member savedMember = memberRepository.save(request.toEntity());
         Long memberId = savedMember.getId();
 
-        accountEventPublisher.publishCreateCheckingAccount(
-                CreateCheckingAccountEvent.of(memberId));
+        eventPublisher.publishEvent(new CreateCheckingAccountEvent(memberId));
+        eventPublisher.publishEvent(new CreateSettingEvent(memberId));
         return memberId;
     }
 

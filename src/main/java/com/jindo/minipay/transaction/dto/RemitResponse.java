@@ -1,4 +1,4 @@
-package com.jindo.minipay.account.checking.dto;
+package com.jindo.minipay.transaction.dto;
 
 import com.jindo.minipay.account.checking.entity.CheckingAccount;
 

@@ -5,8 +5,11 @@ import com.jindo.minipay.account.checking.repository.CheckingAccountRepository;
 import com.jindo.minipay.account.saving.repository.SavingAccountRepository;
 import com.jindo.minipay.member.entity.Member;
 import com.jindo.minipay.member.repository.MemberRepository;
+import com.jindo.minipay.setting.entity.Setting;
+import com.jindo.minipay.setting.repository.SettingRepository;
 import com.jindo.minipay.settlements.repository.SettlementParticipantRepository;
 import com.jindo.minipay.settlements.repository.SettlementRepository;
+import com.jindo.minipay.transaction.repository.TransactionRepository;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +27,9 @@ public abstract class BaseIntegrationTest {
     int port;
 
     @Autowired
+    protected SettingRepository settingRepository;
+
+    @Autowired
     protected MemberRepository memberRepository;
 
     @Autowired
@@ -38,6 +44,9 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected SettlementParticipantRepository settlementParticipantRepository;
 
+    @Autowired
+    protected TransactionRepository transactionRepository;
+
     @BeforeEach
     void setup() {
         RestAssured.port = port;
@@ -47,8 +56,10 @@ public abstract class BaseIntegrationTest {
     void teardown() {
         settlementParticipantRepository.deleteAllInBatch();
         settlementRepository.deleteAllInBatch();
+        transactionRepository.deleteAllInBatch();
         savingAccountRepository.deleteAllInBatch();
         checkingAccountRepository.deleteAllInBatch();
+        settingRepository.deleteAllInBatch();
         memberRepository.deleteAllInBatch();
     }
 
@@ -58,12 +69,15 @@ public abstract class BaseIntegrationTest {
                 .password("test12345")
                 .name("tester1")
                 .build();
-        return memberRepository.save(member);
+        memberRepository.save(member);
+        settingRepository.save(Setting.create(member));
+        return member;
     }
 
     protected void saveCheckingAccount(Member member) {
         CheckingAccount account =
                 CheckingAccount.of("8888-01-1234567", member);
         checkingAccountRepository.save(account);
+        memberRepository.save(member);
     }
 }
