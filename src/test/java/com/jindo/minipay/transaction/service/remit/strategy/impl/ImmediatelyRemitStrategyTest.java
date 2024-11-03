@@ -84,7 +84,7 @@ class ImmediatelyRemitStrategyTest {
 
     @Test
     @DisplayName("내 계좌를 찾을 수 없으면 예외가 발생한다.")
-    void remit_notFount_senderAccountNumber() {
+    void remit_not_found_senderAccountNumber() {
         // given
         given(checkingAccountRepository.findByAccountNumber(senderAccountNumber))
                 .willReturn(Optional.empty());
@@ -98,7 +98,7 @@ class ImmediatelyRemitStrategyTest {
 
     @Test
     @DisplayName("친구 계좌를 찾을 수 없으면 예외가 발생한다.")
-    void remit_notFount_receiverAccountNumber() {
+    void remit_not_found_receiverAccountNumber() {
         // given
         ReflectionTestUtils.setField(senderAccount, "balance", 12000L);
 
