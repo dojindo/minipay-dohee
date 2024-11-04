@@ -23,6 +23,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -37,6 +38,8 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
 
     @Autowired
     TransactionService transactionService;
+
+    Logger logger = Logger.getLogger(AccountConcurrencyTest.class.getName());
 
     @Test
     @DisplayName("적금 계좌 납입과 메인 계좌 충전 요청이 동시에 올 경우 차례로 실행된다.")
@@ -72,16 +75,17 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
 
         // when
         int threadCount = 10;
+        int repeat = 30;
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
         CountDownLatch countDownLatch = new CountDownLatch(threadCount);
 
-        IntStream.range(0, threadCount).forEach(i ->
+        IntStream.range(0, repeat).forEach(i ->
                 executorService.submit(() -> {
                     try {
                         checkingAccountService.charge(chargeRequest);
                         savingAccountService.payIn(payInRequest);
                     } catch (LockException e) {
-                        System.out.println(e.getMessage());
+                        logger.info("error : " + e.getMessage());
                     } finally {
                         countDownLatch.countDown();
                     }
@@ -91,6 +95,7 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
         executorService.shutdown();
 
         // then
+        Thread.sleep(500); // 바로 조회를 하게 되면 executorService로 동작 시킨 thread가 다 끝나기 전에 조회해온다.
         Optional<CheckingAccount> findCheckingAccount =
                 checkingAccountRepository.findById(checkingAccount.getId());
 
@@ -99,9 +104,8 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
 
         assertTrue(findCheckingAccount.isPresent());
         assertTrue(findSavingAccount.isPresent());
-
         assertEquals(0, findCheckingAccount.get().getBalance());
-        assertEquals(threadCount * amount, findSavingAccount.get().getAmount());
+        assertEquals(repeat * amount, findSavingAccount.get().getAmount());
     }
 
     @Nested
@@ -114,7 +118,8 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
         @DisplayName("동일한 친구에게 송금하는 요청이 동시에 올 경우 차례로 실행된다.")
         void concurrency_remit() throws InterruptedException {
             // given
-            int threadCount = 100;
+            int threadCount = 50;
+            int repeat = 100;
 
             Member receiver = memberRepository.save(Member.builder()
                     .email("test@test.com")
@@ -128,9 +133,9 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
             memberRepository.save(receiver);
             settingRepository.save(Setting.create(receiver));
 
-            String[] accountNumbers = new String[threadCount];
+            String[] accountNumbers = new String[repeat];
 
-            for (int i = 0; i < threadCount; i++) {
+            for (int i = 0; i < repeat; i++) {
                 Member member = memberRepository.save(Member.builder()
                         .email("test" + i + "@test.com")
                         .password("test12345")
@@ -152,7 +157,7 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
             ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
             CountDownLatch countDownLatch = new CountDownLatch(threadCount);
 
-            IntStream.range(0, threadCount).forEach(i ->
+            IntStream.range(0, repeat).forEach(i ->
                     executorService.submit(() -> {
                         try {
                             transactionService.remit(RemitRequest.builder()
@@ -161,7 +166,7 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
                                     .amount(10000L)
                                     .build());
                         } catch (AccountException | LockException e) {
-                            System.out.println("exception is occurred" + e.getMessage());
+                            logger.info("error : " + e.getMessage());
                         } finally {
                             countDownLatch.countDown();
                         }
@@ -171,10 +176,12 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
             executorService.shutdown();
 
             // then
-            CheckingAccount receiverCheckingAccount =
-                    checkingAccountRepository.findByAccountNumber(receiverAccountNumber).get();
+            Thread.sleep(500);
+            Optional<CheckingAccount> receiverCheckingAccount =
+                    checkingAccountRepository.findByAccountNumber(receiverAccountNumber);
 
-            assertEquals(10000 * threadCount, receiverCheckingAccount.getBalance());
+            assertTrue(receiverCheckingAccount.isPresent());
+            assertEquals(10000 * repeat, receiverCheckingAccount.get().getBalance());
         }
 
         @Test
