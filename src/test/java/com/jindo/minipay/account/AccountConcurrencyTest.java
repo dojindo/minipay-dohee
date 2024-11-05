@@ -77,14 +77,14 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
         int threadCount = 10;
         int repeat = 30;
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
-        CountDownLatch countDownLatch = new CountDownLatch(threadCount);
+        CountDownLatch countDownLatch = new CountDownLatch(repeat);
 
         IntStream.range(0, repeat).forEach(i ->
                 executorService.submit(() -> {
                     try {
                         checkingAccountService.charge(chargeRequest);
                         savingAccountService.payIn(payInRequest);
-                    } catch (LockException e) {
+                    } catch (LockException | AccountException e) {
                         logger.info("error : " + e.getMessage());
                     } finally {
                         countDownLatch.countDown();
@@ -95,7 +95,6 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
         executorService.shutdown();
 
         // then
-        Thread.sleep(500); // 바로 조회를 하게 되면 executorService로 동작 시킨 thread가 다 끝나기 전에 조회해온다.
         Optional<CheckingAccount> findCheckingAccount =
                 checkingAccountRepository.findById(checkingAccount.getId());
 
@@ -155,7 +154,7 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
 
             // when
             ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
-            CountDownLatch countDownLatch = new CountDownLatch(threadCount);
+            CountDownLatch countDownLatch = new CountDownLatch(repeat);
 
             IntStream.range(0, repeat).forEach(i ->
                     executorService.submit(() -> {
@@ -176,7 +175,6 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
             executorService.shutdown();
 
             // then
-            Thread.sleep(500);
             Optional<CheckingAccount> receiverCheckingAccount =
                     checkingAccountRepository.findByAccountNumber(receiverAccountNumber);
 
