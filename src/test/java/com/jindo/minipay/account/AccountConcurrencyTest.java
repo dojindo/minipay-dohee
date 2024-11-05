@@ -59,6 +59,9 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
         CheckingAccount checkingAccount = checkingAccountRepository.save(
                 CheckingAccount.of(checkingAccountNumber, member));
 
+        // 메인 계좌 미리 충전 (납입할 금액 만큼)
+        checkingAccountService.charge(new ChargeRequest(checkingAccountNumber, 150_000L));
+
         // 적금 계좌
         SavingAccount savingAccount = savingAccountRepository.save(
                 SavingAccount.of(savingAccountNumber, member));
@@ -82,14 +85,18 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
         IntStream.range(0, repeat).forEach(i ->
                 executorService.submit(() -> {
                     try {
-                        checkingAccountService.charge(chargeRequest);
-                        savingAccountService.payIn(payInRequest);
+                        if (i % 2 == 0) {
+                            checkingAccountService.charge(chargeRequest);
+                        } else {
+                            savingAccountService.payIn(payInRequest);
+                        }
                     } catch (LockException | AccountException e) {
                         logger.info("error : " + e.getMessage());
                     } finally {
                         countDownLatch.countDown();
                     }
-                }));
+                })
+        );
 
         countDownLatch.await();
         executorService.shutdown();
@@ -103,8 +110,8 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
 
         assertTrue(findCheckingAccount.isPresent());
         assertTrue(findSavingAccount.isPresent());
-        assertEquals(0, findCheckingAccount.get().getBalance());
-        assertEquals(repeat * amount, findSavingAccount.get().getAmount());
+        assertEquals(150_000L, findCheckingAccount.get().getBalance());
+        assertEquals(150_000L, findSavingAccount.get().getAmount());
     }
 
     @Nested
