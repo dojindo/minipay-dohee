@@ -27,6 +27,10 @@ public enum ErrorCode {
     INVALID_SETTLEMENT_TYPE(BAD_REQUEST, "잘못된 정산 타입입니다."),
     INCORRECT_TOTAL_AMOUNT(BAD_REQUEST, "총 금액이 맞지 않습니다."),
 
+    // fcm
+    NOT_FOUND_FCM_TOKEN(NOT_FOUND, "FCM 토큰을 찾을 수 없습니다."),
+    FCM_SEND_MESSAGE_EXCEPTION(INTERNAL_SERVER_ERROR, "FCM 메시지 전송에 실패했습니다."),
+
     // global
     INVALID_REQUEST(BAD_REQUEST, "잘못된 요청입니다."),
     INTERNAL_ERROR(INTERNAL_SERVER_ERROR, "예상치 못한 내부 문제가 발생했습니다."),
