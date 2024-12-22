@@ -41,3 +41,7 @@ out/
 
 ### sonarcloud ###
 /.sonarlint/
+
+### key ###
+/src/main/resources/.key
+/src/main/resources/static/env.js
