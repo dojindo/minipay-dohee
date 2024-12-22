@@ -10,8 +10,8 @@ values('8888-60-8082444', 1, 12000, now());
 insert into checking_account(account_number, member_id, balance, created_date_time)
 values('8888-44-8427001', 2, 0, now());
 
-insert into setting(remit_type, member_id, created_date_time)
+insert into setting(remit_setting_type, member_id, created_date_time)
 values('IMMEDIATE' , 1, now());
 
-insert into setting(remit_type, member_id, created_date_time)
+insert into setting(remit_setting_type, member_id, created_date_time)
 values('IMMEDIATE' , 2, now());
