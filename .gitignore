@@ -44,4 +44,4 @@ out/
 
 ### key ###
 /src/main/resources/.key
-/src/main/resources/static/env.js
+/src/main/resources/static/fcm/env.js

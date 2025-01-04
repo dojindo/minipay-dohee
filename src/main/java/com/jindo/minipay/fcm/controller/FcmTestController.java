@@ -15,11 +15,11 @@ public class FcmTestController {
     private final FcmService fcmService;
 
     @GetMapping("/fcm/test")
-    public String index() {
-        return "index.html";
+    public String testFcm() {
+        return "fcm-test.html";
     }
 
-    @PostMapping("/notification")
+    @PostMapping("/fcm/test/notification")
     public ResponseEntity<Void> testNotification(@RequestBody NotificationDto dto) {
         fcmService.sendNotification(dto);
         return ResponseEntity.ok().build();

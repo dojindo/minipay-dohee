@@ -8,7 +8,7 @@ Content-Type: application/json
 }
 
 ### fcm test notification
-POST http://localhost:8080/api/v1/fcm/test/notification
+POST http://localhost:8080/fcm/test/notification
 Content-Type: application/json
 
 {
