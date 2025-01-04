@@ -1,6 +1,5 @@
 package com.jindo.minipay.fcm.controller;
 
-import com.jindo.minipay.fcm.dto.NotificationDto;
 import com.jindo.minipay.fcm.dto.TokenRegistrationRequest;
 import com.jindo.minipay.fcm.service.FcmService;
 import lombok.RequiredArgsConstructor;
@@ -20,12 +19,6 @@ public class FcmController {
     public ResponseEntity<Void> tokenRegistration(
             @RequestBody TokenRegistrationRequest request) {
         fcmService.tokenRegistration(request);
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/test-notification")
-    public ResponseEntity<Void> testNotification(@RequestBody NotificationDto dto) {
-        fcmService.sendNotification(dto);
         return ResponseEntity.ok().build();
     }
 }
