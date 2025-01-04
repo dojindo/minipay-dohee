@@ -76,10 +76,10 @@ class FcmServiceTest {
 
             // then
             verify(fcmTokenRepository).save(captor.capture());
-            FcmToken captorValue = captor.getValue();
+            FcmToken capturedFcmToken = captor.getValue();
 
-            assertEquals(request.fcmToken(), captorValue.getToken());
-            assertEquals(member, captorValue.getMember());
+            assertEquals(request.fcmToken(), capturedFcmToken.getToken());
+            assertEquals(member, capturedFcmToken.getMember());
         }
 
         @DisplayName("FCM token을 업데이트한다.")
